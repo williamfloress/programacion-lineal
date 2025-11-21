@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora Programación Lineal</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .log-pasos { background: #f4f4f4; padding: 10px; border-left: 5px solid #2196F3; font-family: monospace; }
+        .log-item { margin-bottom: 5px; }
+        button { padding: 10px 20px; cursor: pointer; background: #28a745; color: white; border: none; }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+
+    <h1>Calculadora Método Gráfico</h1>
+
+    <div class="box">
+        <h3>1. Función Objetivo (Z)</h3>
+        <select id="objetivo">
+            <option value="max">Maximizar</option>
+            <option value="min">Minimizar</option>
+        </select>
+        Z = <input type="number" id="z_x" value="3" style="width: 50px;"> X + 
+            <input type="number" id="z_y" value="2" style="width: 50px;"> Y
+    </div>
+
+    <div class="box">
+        <h3>2. Restricciones</h3>
+        <div id="lista-restricciones">
+            <div class="fila-restriccion">
+                <input type="number" class="res-x" value="2" style="width: 50px;"> X + 
+                <input type="number" class="res-y" value="1" style="width: 50px;"> Y 
+                <select class="res-op"><option value="<=">&le;</option><option value=">=">&ge;</option></select>
+                <input type="number" class="res-val" value="100" style="width: 60px;">
+            </div>
+            <div class="fila-restriccion">
+                <input type="number" class="res-x" value="1" style="width: 50px;"> X + 
+                <input type="number" class="res-y" value="1" style="width: 50px;"> Y 
+                <select class="res-op"><option value="<=">&le;</option><option value=">=">&ge;</option></select>
+                <input type="number" class="res-val" value="80" style="width: 60px;">
+            </div>
+        </div>
+        <br>
+        <button onclick="resolverProblema()">CALCULAR SOLUCIÓN</button>
+    </div>
+
+    <div class="box" id="resultados" style="display:none;">
+        <h3>Representación Gráfica</h3>
+        <div id="grafico" style="width:100%; height:500px;"></div>
+        <h3>3. Paso a Paso (Análisis)</h3>
+        <div id="log-container" class="log-pasos"></div>
+        
+        <h3>Resultado Final:</h3>
+        <p id="texto-resultado" style="font-weight: bold; font-size: 1.2em;"></p>
+    </div>
+
+    <script>
+async function resolverProblema() {
+        // A. Recolectar datos
+        const objetivo = document.getElementById('objetivo').value;
+        const z_x = parseFloat(document.getElementById('z_x').value);
+        const z_y = parseFloat(document.getElementById('z_y').value);
+
+        // Recolectar restricciones
+        const filas = document.querySelectorAll('.fila-restriccion');
+        let restricciones = [];
+        filas.forEach(fila => {
+            restricciones.push({
+                x: parseFloat(fila.querySelector('.res-x').value),
+                y: parseFloat(fila.querySelector('.res-y').value),
+                op: fila.querySelector('.res-op').value,
+                val: parseFloat(fila.querySelector('.res-val').value)
+            });
+        });
+
+        // B. Enviar a Python
+        const respuesta = await fetch('/calcular', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ objetivo, z_x, z_y, restricciones })
+        });
+
+        const datos = await respuesta.json();
+
+        // C. Mostrar Resultados
+        document.getElementById('resultados').style.display = 'block';
+        
+        // Mostrar Log
+        const logDiv = document.getElementById('log-container');
+        logDiv.innerHTML = ''; 
+        datos.pasos.forEach(paso => {
+            const p = document.createElement('div');
+            p.className = 'log-item';
+            p.textContent = paso;
+            logDiv.appendChild(p);
+        });
+
+        // Mostrar Texto Final
+        if(datos.status === 'optimal') {
+            document.getElementById('texto-resultado').innerText = 
+                `Solución Óptima: X=${datos.punto_optimo[0]}, Y=${datos.punto_optimo[1]} (Z = ${datos.z_optimo})`;
+            
+            // D. DIBUJAR GRÁFICA
+            dibujarGrafica(datos, restricciones);
+        } else {
+            document.getElementById('texto-resultado').innerText = "No se encontró solución factible.";
+            document.getElementById('grafico').innerHTML = ""; // Limpiar gráfica si falla
+        }
+    }
+
+    function dibujarGrafica(datos, restricciones) {
+        let traces = [];
+
+        // 1. Determinar el rango de la gráfica (Escala)
+        // Buscamos el valor más alto entre los vértices para saber qué tan grande hacer el dibujo
+        let maxVal = 0;
+        datos.vertices.forEach(v => {
+            maxVal = Math.max(maxVal, v[0], v[1]);
+        });
+        const rango = maxVal * 1.5 || 10; // Un poco más de espacio (o 10 por defecto)
+
+        // 2. Dibujar Región Factible (El área sombreada)
+        // Necesitamos ordenar los vértices por ángulo para que el polígono se pinte bien
+        const verticesOrdenados = ordenarVertices(datos.vertices);
+        
+        // Añadimos el primer punto al final para cerrar el polígono visualmente
+        let x_poly = verticesOrdenados.map(v => v[0]);
+        let y_poly = verticesOrdenados.map(v => v[1]);
+        x_poly.push(x_poly[0]);
+        y_poly.push(y_poly[0]);
+
+        traces.push({
+            x: x_poly,
+            y: y_poly,
+            fill: 'toself',
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Región Factible',
+            fillcolor: 'rgba(0, 255, 0, 0.2)', // Verde transparente
+            line: {color: 'green'}
+        });
+
+        // 3. Dibujar las Líneas de Restricción
+        restricciones.forEach((res, index) => {
+            // Ecuación: ax + by = val
+            // Calculamos dos puntos extremos para dibujar la línea a través de toda la pantalla
+            let x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+
+            if (res.y !== 0) {
+                // Si y no es 0, calculamos y cuando x=0 y x=rango
+                x1 = 0; 
+                y1 = res.val / res.y;
+                x2 = rango; 
+                y2 = (res.val - res.x * rango) / res.y;
+            } else {
+                // Línea vertical (x = val/a)
+                x1 = res.val / res.x;
+                y1 = 0;
+                x2 = x1;
+                y2 = rango;
+            }
+
+            traces.push({
+                x: [x1, x2],
+                y: [y1, y2],
+                type: 'scatter',
+                mode: 'lines',
+                name: `R${index+1}: ${res.x}x + ${res.y}y ${res.op} ${res.val}`,
+                line: {dash: 'dot', width: 1} // Línea punteada
+            });
+        });
+
+        // 4. Marcar el Punto Óptimo
+        traces.push({
+            x: [datos.punto_optimo[0]],
+            y: [datos.punto_optimo[1]],
+            type: 'scatter',
+            mode: 'markers',
+            name: 'Solución Óptima',
+            marker: {color: 'red', size: 12}
+        });
+
+        // Configuración del Layout
+        const layout = {
+            title: 'Método Gráfico',
+            xaxis: {range: [-1, rango], title: 'Variable X'},
+            yaxis: {range: [-1, rango], title: 'Variable Y'},
+            showlegend: true,
+            hovermode: 'closest'
+        };
+
+        Plotly.newPlot('grafico', traces, layout);
+    }
+
+    // Función auxiliar matemática para ordenar puntos en sentido anti-horario
+    // Esto evita que el polígono se pinte como un "moño" cruzado
+    function ordenarVertices(puntos) {
+        // 1. Calcular centroide
+        let cx = 0, cy = 0;
+        puntos.forEach(p => { cx += p[0]; cy += p[1]; });
+        cx /= puntos.length;
+        cy /= puntos.length;
+
+        // 2. Ordenar por ángulo respecto al centroide
+        return puntos.sort((a, b) => {
+            return Math.atan2(a[1] - cy, a[0] - cx) - Math.atan2(b[1] - cy, b[0] - cx);
+        });
+    }
+    </script>
+</body>
+</html>
