@@ -1,0 +1,397 @@
+body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f7fa; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; }
+h1, h2, h3 { color: #2c3e50; }
+
+/* Cajas principales */
+.box { background: white; padding: 25px; margin-bottom: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+/* Botones e Inputs */
+input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 60px; text-align: center; }
+select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+button { padding: 12px 25px; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 5px; font-size: 1em; transition: background 0.3s; }
+button:hover { background: #2980b9; }
+
+/* Filas de restricciones */
+.fila-restriccion { background: #f9f9f9; padding: 10px; margin-bottom: 5px; border-radius: 5px; display: flex; align-items: center; gap: 10px; }
+
+/* --- NUEVOS ESTILOS VISUALES --- */
+
+/* 1. Tabla de Resultados */
+.tabla-resultados { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.tabla-resultados th { background-color: #2c3e50; color: white; padding: 12px; text-align: left; }
+.tabla-resultados td { border-bottom: 1px solid #ddd; padding: 10px; }
+.fila-optima { background-color: #d4edda; font-weight: bold; color: #155724; } /* Verde claro para el ganador */
+
+/* 2. Línea de Tiempo de Pasos (Log) */
+.timeline { 
+    position: relative; 
+    margin-top: 20px; 
+    padding: 0;
+}
+
+/* Secciones principales de cálculo */
+.calculation-section {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.calculation-section:hover {
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.intersection-section {
+    border-left: 5px solid #3498db;
+}
+
+.feasibility-section {
+    border-left: 5px solid #e67e22;
+}
+
+.evaluation-section {
+    border-left: 5px solid #9b59b6;
+}
+
+.section-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 15px 20px;
+    border-bottom: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-icon {
+    font-size: 1.5em;
+    line-height: 1;
+}
+
+.section-title {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 1.1em;
+}
+
+.section-content {
+    padding: 20px;
+}
+
+/* Grupos de intersecciones */
+.intersection-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.intersection-card {
+    background: #f8f9fa;
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    padding: 15px;
+    transition: all 0.2s ease;
+}
+
+.intersection-card:hover {
+    background: #e3f2fd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+}
+
+.intersection-title {
+    font-weight: bold;
+    color: #2980b9;
+    font-size: 1em;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #bdc3c7;
+}
+
+.intersection-system {
+    font-family: 'Courier New', monospace;
+    color: #555;
+    font-size: 0.9em;
+    margin: 8px 0;
+    padding: 8px;
+    background: white;
+    border-radius: 4px;
+    border-left: 3px solid #3498db;
+}
+
+.intersection-solution {
+    font-family: 'Courier New', monospace;
+    color: #27ae60;
+    font-weight: bold;
+    font-size: 1em;
+    margin-top: 10px;
+    padding: 10px;
+    background: #d4edda;
+    border-radius: 4px;
+    border-left: 3px solid #27ae60;
+}
+
+/* Grupos de verificación de puntos */
+.point-verification-group {
+    background: #fff5e6;
+    border: 2px solid #e67e22;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.point-verification-group:hover {
+    box-shadow: 0 4px 8px rgba(230, 126, 34, 0.2);
+}
+
+.point-header {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 2px solid #e67e22;
+}
+
+.point-icon {
+    font-size: 1.3em;
+}
+
+.point-coords {
+    font-weight: bold;
+    color: #d35400;
+    font-size: 1.1em;
+}
+
+.checks-container {
+    padding: 15px 20px;
+    background: white;
+}
+
+.check-item {
+    padding: 10px 15px;
+    margin: 8px 0;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95em;
+    border-left: 4px solid;
+}
+
+.check-valid {
+    background: #d4edda;
+    color: #155724;
+    border-left-color: #27ae60;
+}
+
+.check-invalid {
+    background: #f8d7da;
+    color: #721c24;
+    border-left-color: #e74c3c;
+}
+
+.point-conclusion {
+    padding: 15px 20px;
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-top: 10px;
+    border-top: 2px solid;
+}
+
+.conclusion-valid {
+    background: #d4edda;
+    color: #155724;
+    border-top-color: #27ae60;
+}
+
+.conclusion-invalid {
+    background: #f8d7da;
+    color: #721c24;
+    border-top-color: #e74c3c;
+}
+
+/* Grupos de evaluación de vértices */
+.vertex-evaluation-group {
+    background: #f4ecf7;
+    border: 2px solid #9b59b6;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.vertex-evaluation-group:hover {
+    box-shadow: 0 4px 8px rgba(155, 89, 182, 0.2);
+}
+
+.vertex-header {
+    background: linear-gradient(135deg, #e8d5f2 0%, #d2b4de 100%);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 2px solid #9b59b6;
+}
+
+.vertex-icon {
+    font-size: 1.3em;
+}
+
+.vertex-title {
+    font-weight: bold;
+    color: #6c3483;
+    font-size: 1.1em;
+}
+
+.z-calculation {
+    padding: 15px 20px;
+    font-family: 'Courier New', monospace;
+    color: #555;
+    background: white;
+    border-left: 4px solid #9b59b6;
+    margin: 10px;
+    border-radius: 4px;
+}
+
+.optimization-summary {
+    padding: 12px 20px;
+    background: #e3f2fd;
+    color: #2980b9;
+    font-weight: bold;
+    border-top: 2px solid #3498db;
+    margin-top: 10px;
+}
+
+.optimal-vertex {
+    padding: 12px 20px;
+    background: #d4edda;
+    color: #155724;
+    font-weight: bold;
+    border-top: 2px solid #27ae60;
+}
+
+/* Items de restricciones */
+.restriction-item {
+    padding: 10px 15px;
+    margin: 5px 0;
+    background: #f8f9fa;
+    border-left: 3px solid #6c757d;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+/* Cards genéricos */
+.step-card { 
+    background: white; 
+    border: 1px solid #eee; 
+    margin-bottom: 8px; 
+    padding: 12px 15px; 
+    border-radius: 8px; 
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+
+.step-card:hover {
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    transform: translateX(2px);
+}
+
+.step-title { 
+    font-weight: bold; 
+    color: #2c3e50; 
+    margin-bottom: 5px; 
+    display: block; 
+    line-height: 1.5;
+}
+
+.step-detail { 
+    color: #666; 
+    font-size: 0.95em; 
+    line-height: 1.6;
+    display: block;
+}
+
+/* Caja de Resultado Final */
+.resultado-final-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 1.5em;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Estilos para sección de cálculos colapsable */
+.calculations-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.toggle-btn {
+    padding: 8px 15px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.toggle-btn:hover {
+    background: #2980b9;
+}
+
+.toggle-btn span {
+    font-size: 0.8em;
+    transition: transform 0.3s;
+}
+
+.calculations-summary {
+    margin-top: 15px;
+}
+
+.summary-box {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.summary-item {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.summary-item strong {
+    display: block;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    font-size: 1em;
+}
+
+.summary-item span {
+    display: block;
+    color: #555;
+    margin-left: 20px;
+    line-height: 1.6;
+}
+
