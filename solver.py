@@ -1,5 +1,149 @@
 import numpy as np
 
+def convertir_restricciones_relacionales(restricciones_str):
+    """
+    Convierte restricciones escritas en forma relacional a formato estándar.
+    
+    Esta función ayuda a convertir restricciones como "y >= x" o "y <= 2x" 
+    al formato estándar Ax + By op C que requiere el solver.
+    
+    CONVERSIÓN MANUAL (RECOMENDADO):
+    Para mejor control, convierte manualmente usando estas reglas:
+    
+    1. Restricciones con relaciones entre variables:
+       - "y >= x" → Mover todo al lado izquierdo: "-x + y >= 0"
+         → A = [-1, 1], b = 0, op = '>='
+       
+       - "y <= 2x" → Mover todo al lado izquierdo: "-2x + y <= 0"
+         → A = [-2, 1], b = 0, op = '<='
+       
+       - "y >= 2x + 5" → "-2x + y >= 5"
+         → A = [-2, 1], b = 5, op = '>='
+    
+    2. Restricciones simples:
+       - "x <= 30" → A = [1, 0], b = 30, op = '<='
+       - "y <= 20" → A = [0, 1], b = 20, op = '<='
+       - "x + y <= 10" → A = [1, 1], b = 10, op = '<='
+    
+    EJEMPLO DE USO:
+    restricciones = ["y >= x", "y <= 2x", "x <= 30", "y <= 20"]
+    A, b, operadores = convertir_restricciones_relacionales(restricciones)
+    
+    Parámetros:
+        restricciones_str: Lista de strings con restricciones en forma natural
+    
+    Retorna:
+        (A, b, operadores): Matriz A, vector b, y lista de operadores
+    """
+    A = []
+    b = []
+    operadores = []
+    
+    for restriccion in restricciones_str:
+        restriccion = restriccion.strip().replace(" ", "")
+        
+        # Detectar operador
+        if ">=" in restriccion:
+            partes = restriccion.split(">=")
+            op = ">="
+        elif "<=" in restriccion:
+            partes = restriccion.split("<=")
+            op = "<="
+        elif "=" in restriccion:
+            partes = restriccion.split("=")
+            op = "="
+        else:
+            raise ValueError(f"No se pudo detectar el operador en: {restriccion}")
+        
+        lado_izq = partes[0]
+        lado_der = partes[1]
+        
+        coef_x = 0
+        coef_y = 0
+        b_val = 0
+        
+        # Parsear lado izquierdo (puede contener x, y, o ambos)
+        if "x" in lado_izq:
+            idx_x = lado_izq.index("x")
+            if idx_x == 0:
+                coef_x = 1
+            else:
+                coef_x_str = lado_izq[:idx_x]
+                if coef_x_str in ["+", ""]:
+                    coef_x = 1
+                elif coef_x_str == "-":
+                    coef_x = -1
+                else:
+                    coef_x = float(coef_x_str)
+        
+        if "y" in lado_izq:
+            idx_y = lado_izq.index("y")
+            if idx_y == 0:
+                coef_y = 1
+            else:
+                # Buscar coeficiente antes de y
+                inicio = 0
+                if "x" in lado_izq and idx_y > lado_izq.index("x"):
+                    inicio = lado_izq.index("x") + 1
+                
+                coef_y_str = lado_izq[inicio:idx_y]
+                if coef_y_str in ["+", ""]:
+                    coef_y = 1
+                elif coef_y_str == "-":
+                    coef_y = -1
+                else:
+                    coef_y = float(coef_y_str) if coef_y_str else 1
+        
+        # Parsear lado derecho
+        # Si tiene variables, moverlas al lado izquierdo
+        if "x" in lado_der:
+            idx_x = lado_der.index("x")
+            coef_der_x = 1
+            if idx_x > 0:
+                coef_der_x_str = lado_der[:idx_x]
+                if coef_der_x_str in ["+", ""]:
+                    coef_der_x = 1
+                elif coef_der_x_str == "-":
+                    coef_der_x = -1
+                else:
+                    coef_der_x = float(coef_der_x_str)
+            coef_x -= coef_der_x  # Restar del lado izquierdo
+            lado_der = lado_der[idx_x+1:].lstrip("+-")
+        
+        if "y" in lado_der:
+            idx_y = lado_der.index("y")
+            coef_der_y = 1
+            if idx_y > 0:
+                coef_der_y_str = lado_der[:idx_y]
+                if coef_der_y_str in ["+", ""]:
+                    coef_der_y = 1
+                elif coef_der_y_str == "-":
+                    coef_der_y = -1
+                else:
+                    coef_der_y = float(coef_der_y_str)
+            coef_y -= coef_der_y  # Restar del lado izquierdo
+            lado_der = lado_der[idx_y+1:].lstrip("+-")
+        
+        # El resto del lado derecho debe ser un número
+        if lado_der and lado_der not in ["x", "y"]:
+            try:
+                b_val = float(lado_der)
+            except ValueError:
+                # Si queda algo que no es número puro, intentar extraer número
+                import re
+                numeros = re.findall(r'-?\d+\.?\d*', lado_der)
+                if numeros:
+                    b_val = float(numeros[0])
+                else:
+                    b_val = 0
+        
+        A.append([coef_x, coef_y])
+        b.append(b_val)
+        operadores.append(op)
+    
+    return A, b, operadores
+
+
 class MetodoGrafico:
     def __init__(self, c, A, b,operadores, objetivo='max'):
         """
@@ -89,12 +233,17 @@ class MetodoGrafico:
 
     #4 Paso: Encontrar el Valor Optimo de la funcion objetivo.
     def resolver(self):
-        self.registrar_paso(f"FUNCIÓN OBJETIVO: {self.objetivo.upper()} Z = {self.c[0]}x + {self.c[1]}y")
+        # Formatear función objetivo con operadores correctos
+        signo_y = '-' if self.c[1] < 0 else '+'
+        abs_y = abs(self.c[1])
+        self.registrar_paso(f"FUNCIÓN OBJETIVO: {self.objetivo.upper()} Z = {self.c[0]}x {signo_y} {abs_y}y")
         
         # Mostrar restricciones
         self.registrar_paso("RESTRICCIONES:")
         for idx, (a_row, b_val, op) in enumerate(zip(self.A, self.b, self.operadores), 1):
-            self.registrar_paso(f"  R{idx}: {a_row[0]}x + {a_row[1]}y {op} {b_val}")
+            signo_y = '-' if a_row[1] < 0 else '+'
+            abs_y = abs(a_row[1])
+            self.registrar_paso(f"  R{idx}: {a_row[0]}x {signo_y} {abs_y}y {op} {b_val}")
         
         # 1. Intersecciones
         puntos_corte = []
@@ -118,9 +267,13 @@ class MetodoGrafico:
                     punto = np.linalg.solve(A_temp, b_temp)
                     puntos_corte.append(punto)
                     
-                    # Mostrar el cálculo de la intersección
-                    eq1 = f"{matriz_total[i][0]}x + {matriz_total[i][1]}y = {vector_total[i]}"
-                    eq2 = f"{matriz_total[j][0]}x + {matriz_total[j][1]}y = {vector_total[j]}"
+                    # Mostrar el cálculo de la intersección con formato correcto
+                    signo1_y = '-' if matriz_total[i][1] < 0 else '+'
+                    abs1_y = abs(matriz_total[i][1])
+                    signo2_y = '-' if matriz_total[j][1] < 0 else '+'
+                    abs2_y = abs(matriz_total[j][1])
+                    eq1 = f"{matriz_total[i][0]}x {signo1_y} {abs1_y}y = {vector_total[i]}"
+                    eq2 = f"{matriz_total[j][0]}x {signo2_y} {abs2_y}y = {vector_total[j]}"
                     self.registrar_paso(f"  {etiquetas[i]} ∩ {etiquetas[j]}:")
                     self.registrar_paso(f"    Sistema: {eq1} y {eq2}")
                     self.registrar_paso(f"    Solución: P({punto[0]:.2f}, {punto[1]:.2f})")
@@ -165,7 +318,11 @@ class MetodoGrafico:
                     cumple = True
                 
                 simbolo = "✓" if cumple else "✗"
-                self.registrar_paso(f"    {simbolo} R{idx}: {a_row[0]}·{p[0]:.2f} + {a_row[1]}·{p[1]:.2f} = {valor:.2f} {op} {b_val}")
+                signo_y = '-' if a_row[1] < 0 else '+'
+                abs_a1 = abs(a_row[1])
+                signo_calc = '-' if a_row[1]*p[1] < 0 else '+'
+                abs_calc = abs(a_row[1]*p[1])
+                self.registrar_paso(f"    {simbolo} R{idx}: {a_row[0]}·{p[0]:.2f} {signo_y} {abs_a1}·{p[1]:.2f} = {a_row[0]*p[0]:.2f} {signo_calc} {abs_calc} = {valor:.2f} {op} {b_val}")
                 
                 if not cumple:
                     factible = False
@@ -191,14 +348,20 @@ class MetodoGrafico:
         
         # 3. Optimizar y Analizar Tipo de Solución
         self.registrar_paso("EVALUACIÓN DE VÉRTICES EN LA FUNCIÓN OBJETIVO:")
-        self.registrar_paso(f"  Z = {self.c[0]}x + {self.c[1]}y")
+        signo_y = '-' if self.c[1] < 0 else '+'
+        abs_y = abs(self.c[1])
+        self.registrar_paso(f"  Z = {self.c[0]}x {signo_y} {abs_y}y")
         
         resultados_vertices = []
         
         # Calculamos Z para todos primero
         for v in self.vertices:
             z = np.dot(self.c, v)
-            calculo = f"{self.c[0]}·{v[0]:.2f} + {self.c[1]}·{v[1]:.2f} = {self.c[0]*v[0]:.2f} + {self.c[1]*v[1]:.2f} = {z:.2f}"
+            signo_y = '-' if self.c[1] < 0 else '+'
+            abs_c1 = abs(self.c[1])
+            signo_calc = '-' if self.c[1]*v[1] < 0 else '+'
+            abs_calc = abs(self.c[1]*v[1])
+            calculo = f"{self.c[0]}·{v[0]:.2f} {signo_y} {abs_c1}·{v[1]:.2f} = {self.c[0]*v[0]:.2f} {signo_calc} {abs_calc} = {z:.2f}"
             self.registrar_paso(f"  Vértice ({v[0]:.2f}, {v[1]:.2f}):")
             self.registrar_paso(f"    Z = {calculo}")
             
@@ -251,34 +414,495 @@ class MetodoGrafico:
             "puntos_ganadores": [g['punto'] for g in ganadores], # Enviamos todos los ganadores
             "pasos": self.pasos
         }
+
+
+class MetodoSimplex:
+    def __init__(self, c, A, b, operadores, objetivo='max'):
+        """
+        c: Coeficientes de la función objetivo [c1, c2, ...]
+        A: Matriz de coeficientes de las restricciones
+        b: Vector de límites de restricciones
+        operadores: Lista de operadores ['<=', '>=', '=']
+        objetivo: 'max' o 'min'
+        """
+        self.c = np.array(c, dtype=float)
+        self.A = np.array(A, dtype=float)
+        self.b = np.array(b, dtype=float)
+        self.operadores = operadores
+        self.objetivo = objetivo
+        self.pasos = []
+        self.tablas = []  # Guardaremos cada tabla del Simplex
+        
+    def registrar_paso(self, mensaje):
+        """Guarda un mensaje en la lista de pasos."""
+        self.pasos.append(mensaje)
+    
+    def registrar_tabla(self, tabla, iteracion, variables_basicas=None, explicacion=""):
+        """Guarda una tabla del Simplex para visualización."""
+        self.tablas.append({
+            "iteracion": iteracion,
+            "tabla": tabla.tolist(),
+            "variables_basicas": variables_basicas if variables_basicas else [],
+            "explicacion": explicacion
+        })
+    
+    def convertir_forma_estandar(self):
+        """Convierte el problema a forma estándar."""
+        self.registrar_paso("CONVERSIÓN A FORMA ESTÁNDAR:")
+        self.registrar_paso(f"Problema original: {self.objetivo.upper()} Z = {' + '.join([f'{self.c[i]}x{i+1}' for i in range(len(self.c))])}")
+        
+        num_vars = len(self.c)
+        num_rest = len(self.b)
+        
+        # Contar variables de holgura, exceso y artificiales necesarias
+        num_holgura = sum(1 for op in self.operadores if op == '<=')
+        num_exceso = sum(1 for op in self.operadores if op == '>=')
+        num_artificiales = sum(1 for op in self.operadores if op in ['>=', '='])
+        
+        self.registrar_paso(f"Variables de holgura necesarias: {num_holgura}")
+        self.registrar_paso(f"Variables de exceso necesarias: {num_exceso}")
+        self.registrar_paso(f"Variables artificiales necesarias: {num_artificiales}")
+        
+        # Construir matriz extendida
+        A_estandar = np.zeros((num_rest, num_vars + num_holgura + num_exceso + num_artificiales))
+        col_actual = num_vars
+        
+        # Variables de holgura y exceso
+        idx_holgura = 0
+        idx_exceso = 0
+        idx_artificial = 0
+        
+        for i in range(num_rest):
+            # Copiar coeficientes originales
+            # Validar que cada restricción tenga el número correcto de variables
+            if len(self.A[i]) != num_vars:
+                raise ValueError(
+                    f"La restricción {i+1} tiene {len(self.A[i])} variables, "
+                    f"pero la función objetivo tiene {num_vars} variables. "
+                    f"Todas las restricciones deben tener el mismo número de variables que el objetivo."
+                )
+            A_estandar[i, :num_vars] = self.A[i]
+            
+            if self.operadores[i] == '<=':
+                A_estandar[i, col_actual] = 1  # Variable de holgura
+                self.registrar_paso(f"R{i+1}: Agregada variable de holgura s{idx_holgura+1}")
+                col_actual += 1
+                idx_holgura += 1
+            elif self.operadores[i] == '>=':
+                A_estandar[i, col_actual] = -1  # Variable de exceso
+                self.registrar_paso(f"R{i+1}: Agregada variable de exceso e{idx_exceso+1}")
+                col_actual += 1
+                idx_exceso += 1
+                # También agregar variable artificial
+                A_estandar[i, col_actual] = 1
+                self.registrar_paso(f"R{i+1}: Agregada variable artificial a{idx_artificial+1}")
+                col_actual += 1
+                idx_artificial += 1
+            elif self.operadores[i] == '=':
+                A_estandar[i, col_actual] = 1  # Variable artificial
+                self.registrar_paso(f"R{i+1}: Agregada variable artificial a{idx_artificial+1}")
+                col_actual += 1
+                idx_artificial += 1
+        
+        # Función objetivo extendida
+        c_estandar = np.zeros(num_vars + num_holgura + num_exceso + num_artificiales)
+        c_estandar[:num_vars] = -self.c if self.objetivo == 'max' else self.c
+        
+        # Si hay variables artificiales, usar método de dos fases o Big M
+        # Por simplicidad, usaremos Big M con M grande
+        M = 10000
+        if num_artificiales > 0:
+            # Coeficientes para variables artificiales en la función objetivo
+            idx_art = num_vars + num_holgura + num_exceso
+            for i in range(num_artificiales):
+                c_estandar[idx_art + i] = M
+        
+        return A_estandar, c_estandar, num_vars, num_holgura, num_exceso, num_artificiales
+    
+    def resolver(self):
+        """Resuelve el problema usando el método Simplex."""
+        self.registrar_paso(f"=== MÉTODO SIMPLEX ===")
+        # Formatear función objetivo con operadores correctos
+        objetivo_str = f"{self.c[0]}x₁"
+        for i in range(1, len(self.c)):
+            signo = '-' if self.c[i] < 0 else '+'
+            abs_val = abs(self.c[i])
+            objetivo_str += f" {signo} {abs_val}x{i+1}"
+        self.registrar_paso(f"FUNCIÓN OBJETIVO: {self.objetivo.upper()} Z = {objetivo_str}")
+        
+        self.registrar_paso("RESTRICCIONES:")
+        for idx, (a_row, b_val, op) in enumerate(zip(self.A, self.b, self.operadores), 1):
+            # Formatear restricción con operadores correctos
+            restriccion_str = f"{a_row[0]}x₁"
+            for i in range(1, len(a_row)):
+                signo = '-' if a_row[i] < 0 else '+'
+                abs_val = abs(a_row[i])
+                restriccion_str += f" {signo} {abs_val}x{i+1}"
+            self.registrar_paso(f"  R{idx}: {restriccion_str} {op} {b_val}")
+        
+        # Convertir a forma estándar
+        A_estandar, c_estandar, num_vars, num_holgura, num_exceso, num_artificiales = self.convertir_forma_estandar()
+        
+        num_rest = len(self.b)
+        num_cols_totales = A_estandar.shape[1]
+        
+        # Identificar variables básicas iniciales
+        variables_basicas = []
+        indices_basicas = []
+        
+        # Variables básicas iniciales: holguras y artificiales
+        col_actual = num_vars
+        for i in range(num_rest):
+            if self.operadores[i] == '<=':
+                variables_basicas.append(f"s{len([v for v in variables_basicas if v.startswith('s')]) + 1}")
+                indices_basicas.append(col_actual)
+                col_actual += 1
+            elif self.operadores[i] == '>=':
+                variables_basicas.append(f"a{len([v for v in variables_basicas if v.startswith('a')]) + 1}")
+                indices_basicas.append(col_actual + 1)  # La artificial está después del exceso
+                col_actual += 2
+            elif self.operadores[i] == '=':
+                variables_basicas.append(f"a{len([v for v in variables_basicas if v.startswith('a')]) + 1}")
+                indices_basicas.append(col_actual)
+                col_actual += 1
+        
+        # Crear tabla inicial
+        tabla = np.zeros((num_rest + 1, num_cols_totales + 1))
+        tabla[:-1, :num_cols_totales] = A_estandar
+        tabla[:-1, -1] = self.b
+        tabla[-1, :num_cols_totales] = c_estandar
+        
+        # Calcular Z inicial correctamente
+        # Z = sum(c_basica * b) donde c_basica son los coeficientes de las variables básicas
+        z_val = 0
+        for i, idx_basica in enumerate(indices_basicas):
+            z_val += c_estandar[idx_basica] * self.b[i]
+        tabla[-1, -1] = z_val
+        
+        # Actualizar fila Z para que los coeficientes de variables básicas sean 0
+        for i, idx_basica in enumerate(indices_basicas):
+            if abs(tabla[-1, idx_basica]) > 1e-9:
+                factor = tabla[-1, idx_basica]
+                tabla[-1, :] -= factor * tabla[i, :]
+        
+        self.registrar_paso("\nTABLA INICIAL:")
+        self.registrar_tabla(tabla, 0, variables_basicas, "Tabla inicial del Simplex")
+        
+        iteracion = 0
+        max_iteraciones = 100
+        
+        while iteracion < max_iteraciones:
+            iteracion += 1
+            self.registrar_paso(f"\n--- ITERACIÓN {iteracion} ---")
+            
+            # Verificar optimalidad
+            fila_z = tabla[-1, :num_cols_totales]
+            
+            # Para maximización: convertimos c a negativo, así que buscamos valores negativos
+            # Para minimización: c es positivo, así que buscamos valores positivos
+            if self.objetivo == 'max':
+                # Buscamos el más negativo (el que más mejora Z)
+                indices_negativos = np.where(fila_z < -1e-9)[0]
+                if len(indices_negativos) == 0:
+                    self.registrar_paso("✓ Condición de optimalidad alcanzada (todos los coeficientes ≥ 0)")
+                    break
+                col_entrante = indices_negativos[np.argmin(fila_z[indices_negativos])]
+            else:  # min
+                # Buscamos el más positivo (el que más reduce Z)
+                indices_positivos = np.where(fila_z > 1e-9)[0]
+                if len(indices_positivos) == 0:
+                    self.registrar_paso("✓ Condición de optimalidad alcanzada (todos los coeficientes ≤ 0)")
+                    break
+                col_entrante = indices_positivos[np.argmax(fila_z[indices_positivos])]
+            
+            self.registrar_paso(f"Variable entrante: Columna {col_entrante + 1} (coeficiente: {fila_z[col_entrante]:.4f})")
+            
+            # Calcular ratios para determinar variable saliente
+            ratios = []
+            for i in range(num_rest):
+                if tabla[i, col_entrante] > 1e-9:
+                    ratio = tabla[i, -1] / tabla[i, col_entrante]
+                    ratios.append(ratio)
+                else:
+                    ratios.append(np.inf)
+            
+            if all(r == np.inf for r in ratios):
+                self.registrar_paso("⚠ Problema no acotado: No se puede encontrar variable saliente")
+                return {
+                    "status": "unbounded",
+                    "tipo_solucion": "Problema No Acotado",
+                    "explicacion": "El problema no tiene solución óptima finita. La región factible es no acotada.",
+                    "pasos": self.pasos,
+                    "tablas": self.tablas
+                }
+            
+            fila_saliente = np.argmin(ratios)
+            self.registrar_paso(f"Variable saliente: Fila {fila_saliente + 1} (ratio mínimo: {ratios[fila_saliente]:.4f})")
+            
+            # Actualizar variable básica
+            if col_entrante < num_vars:
+                var_nombre = f"x{col_entrante + 1}"
+            elif col_entrante < num_vars + num_holgura:
+                var_nombre = f"s{col_entrante - num_vars + 1}"
+            elif col_entrante < num_vars + num_holgura + num_exceso:
+                var_nombre = f"e{col_entrante - num_vars - num_holgura + 1}"
+            else:
+                var_nombre = f"a{col_entrante - num_vars - num_holgura - num_exceso + 1}"
+            
+            variables_basicas[fila_saliente] = var_nombre
+            indices_basicas[fila_saliente] = col_entrante
+            
+            # Pivoteo
+            elemento_pivote = tabla[fila_saliente, col_entrante]
+            self.registrar_paso(f"Elemento pivote: {elemento_pivote:.4f}")
+            
+            # Normalizar fila pivote
+            tabla[fila_saliente, :] /= elemento_pivote
+            
+            # Eliminación gaussiana
+            for i in range(num_rest + 1):
+                if i != fila_saliente:
+                    factor = tabla[i, col_entrante]
+                    tabla[i, :] -= factor * tabla[fila_saliente, :]
+            
+            # Actualizar Z
+            z_val = tabla[-1, -1]
+            self.registrar_paso(f"Valor de Z después de la iteración: {z_val:.4f}")
+            
+            self.registrar_tabla(tabla.copy(), iteracion, variables_basicas.copy(), 
+                               f"Iteración {iteracion}: {var_nombre} entra, {variables_basicas[fila_saliente] if fila_saliente < len(variables_basicas) else 'N/A'} sale")
+        
+        # Extraer solución
+        solucion = np.zeros(num_vars)
+        for i, idx_basica in enumerate(indices_basicas):
+            if idx_basica < num_vars:
+                solucion[idx_basica] = tabla[i, -1]
+        
+        z_optimo = -tabla[-1, -1] if self.objetivo == 'max' else tabla[-1, -1]
+        
+        self.registrar_paso(f"\n=== SOLUCIÓN ÓPTIMA ===")
+        self.registrar_paso(f"Valor óptimo de Z: {z_optimo:.4f}")
+        for i in range(num_vars):
+            self.registrar_paso(f"x{i+1} = {solucion[i]:.4f}")
+        
+        # Verificar si hay variables artificiales en la base (problema no factible)
+        if num_artificiales > 0:
+            idx_art_inicio = num_vars + num_holgura + num_exceso
+            for i, idx_basica in enumerate(indices_basicas):
+                if idx_basica >= idx_art_inicio:
+                    if abs(tabla[i, -1]) > 1e-6:
+                        return {
+                            "status": "infeasible",
+                            "tipo_solucion": "Problema No Factible",
+                            "explicacion": "Una variable artificial permanece en la base con valor distinto de cero.",
+                            "pasos": self.pasos,
+                            "tablas": self.tablas
+                        }
+        
+        return {
+            "status": "optimal",
+            "tipo_solucion": "Solución Única",
+            "explicacion": f"Solución óptima encontrada después de {iteracion} iteraciones.",
+            "z_optimo": float(z_optimo),
+            "solucion": solucion.tolist(),
+            "iteraciones": iteracion,
+            "pasos": self.pasos,
+            "tablas": self.tablas,
+            "variables_basicas": variables_basicas
+        }
+
 #------ ZONA DE PRUEBA -------
+# 
+# EJEMPLOS DE USO PARA RESTRICCIONES CON RELACIONES ENTRE VARIABLES:
+#
+# El solver puede manejar restricciones que relacionan variables entre sí,
+# como "y >= x" o "y <= 2x". Estas deben convertirse a forma estándar:
+#
+# FORMA 1: Conversión Manual (Recomendado para mayor control)
+# ============================================================
+# Restricción: "y >= x"
+# Paso 1: Mover todo al lado izquierdo → "-x + y >= 0"
+# Paso 2: Identificar coeficientes:
+#         - Coeficiente de x: -1
+#         - Coeficiente de y: 1
+#         - Valor derecho: 0
+#         - Operador: >=
+# Resultado: A = [-1, 1], b = 0, operador = '>='
+#
+# Restricción: "y <= 2x"
+# Paso 1: Mover todo al lado izquierdo → "-2x + y <= 0"
+# Paso 2: Identificar coeficientes:
+#         - Coeficiente de x: -2
+#         - Coeficiente de y: 1
+#         - Valor derecho: 0
+#         - Operador: <=
+# Resultado: A = [-2, 1], b = 0, operador = '<='
+#
+# FORMA 2: Usando la función helper (más cómodo)
+# ===============================================
+# from solver import convertir_restricciones_relacionales
+#
+# restricciones = ["y >= x", "y <= 2x", "x <= 30", "y <= 20"]
+# A, b, operadores = convertir_restricciones_relacionales(restricciones)
+#
+# EJEMPLO COMPLETO:
+# =================
+# c = [1, 1]  # Función objetivo: Z = x + y
+# 
+# A = [
+#     [-1, 1],   # y >= x  →  -x + y >= 0
+#     [-2, 1],   # y <= 2x →  -2x + y <= 0
+#     [1, 0],    # x <= 30
+#     [0, 1],    # y <= 20
+# ]
+# b = [0, 0, 30, 20]
+# operadores = ['>=', '<=', '<=', '<=']
+#
+# problema = MetodoGrafico(c, A, b, operadores, objetivo='max')
+# resultado = problema.resolver()
 
 if __name__ == "__main__":
+    import sys
+    
+    # Test case 1: Problema original
+    if len(sys.argv) == 1 or sys.argv[1] == "1":
+        print("="*50)
+        print("TEST CASE 1: Problema Original")
+        print("="*50)
+        
+        #1. Configurar datos:
+        c = [3, 2] #Z = 3x + 2y
 
-    #1. Configurar datos:
-    c = [3, 2] #Z = 3x + 2y
+        #Restricciones: (Lado izquierdo de la desigualdad)
+        A = [
+            [2, 1], #2x + 1y
+            [1, 1], #1x + 1y
+            [0, 1], #0x + 1y
+        ]
 
-    #Restricciones: (Lado izquierdo de la desigualdad)
-    A = [
-        [2, 1], #2x + 1y
-        [1, 1], #1x + 1y
-        [0, 1], #0x + 1y
-    ]
+        b = [10, 8, 8] #10, 8, 8
+        operadores = ['<=', '<=', '<=']
 
-    b = [10, 8, 8] #10, 8, 8
+        #2. Crear el Objetivo:
+        problema = MetodoGrafico(c, A, b, operadores, objetivo= 'max')
+        problema.mostrar_datos()
 
-    #2. Crear el Objetivo:
-    problema = MetodoGrafico(c, A, b, objetivo= 'max')
-    problema.mostrar_datos()
+        #3. Resolver: 
+        resultado = problema.resolver()
 
-    #3. Resolver: 
-
-    resultado = problema.resolver()
-
-    print ("\n" + "="*30)
-    print (f"SOLUCION ÓPTIMA:")
-    print (f"Punto x,y: {resultado[0]}")
-    print (f"Valor Optimo de Z: {resultado[1]}")
+        print ("\n" + "="*30)
+        print (f"SOLUCION ÓPTIMA:")
+        if resultado.get('status') == 'optimal':
+            print (f"Punto óptimo: {resultado.get('punto_optimo')}")
+            print (f"Valor Optimo de Z: {resultado.get('z_optimo')}")
+            print (f"Tipo de solución: {resultado.get('tipo_solucion')}")
+    
+    # Test case 2: Restricciones con relaciones entre variables (y >= x, y <= 2x, etc.)
+    elif sys.argv[1] == "2":
+        print("="*50)
+        print("TEST CASE 2: Restricciones con relaciones entre variables")
+        print("Restricciones: y >= x, y <= 2x, x <= 30, y <= 20")
+        print("="*50)
+        
+        # Función objetivo: Maximizar o minimizar (ejemplo)
+        c = [1, 1]  # Z = x + y (puedes cambiarlo)
+        
+        # Restricciones convertidas a forma estándar:
+        # y >= x  →  -x + y >= 0  →  A = [-1, 1], b = 0, op = '>='
+        # y <= 2x →  -2x + y <= 0  →  A = [-2, 1], b = 0, op = '<='
+        # x <= 30 →  A = [1, 0], b = 30, op = '<='
+        # y <= 20 →  A = [0, 1], b = 20, op = '<='
+        
+        A = [
+            [-1, 1],   # -x + y >= 0  (equivalente a y >= x)
+            [-2, 1],   # -2x + y <= 0  (equivalente a y <= 2x)
+            [1, 0],    # x <= 30
+            [0, 1],    # y <= 20
+        ]
+        
+        b = [0, 0, 30, 20]
+        operadores = ['>=', '<=', '<=', '<=']
+        
+        # Crear y resolver el problema
+        problema = MetodoGrafico(c, A, b, operadores, objetivo='max')
+        
+        print("\nRestricciones en forma estándar:")
+        print("R1: -x + y >= 0   (y >= x)")
+        print("R2: -2x + y <= 0  (y <= 2x)")
+        print("R3: x <= 30")
+        print("R4: y <= 20")
+        print()
+        
+        resultado = problema.resolver()
+        
+        print("\n" + "="*30)
+        print("RESULTADO:")
+        if resultado.get('status') == 'optimal':
+            print(f"Tipo de solución: {resultado.get('tipo_solucion')}")
+            print(f"Punto óptimo: {resultado.get('punto_optimo')}")
+            print(f"Valor óptimo de Z: {resultado.get('z_optimo')}")
+            print(f"\nVértices factibles: {len(resultado.get('vertices', []))}")
+            for v in resultado.get('vertices', []):
+                print(f"  - ({v[0]:.2f}, {v[1]:.2f})")
+        elif resultado.get('status') == 'infeasible':
+            print(f"Tipo de solución: {resultado.get('tipo_solucion')}")
+            print(f"Explicación: {resultado.get('explicacion')}")
+        
+        # Mostrar pasos detallados
+        print("\n" + "="*50)
+        print("PASOS DETALLADOS:")
+        print("="*50)
+        for paso in resultado.get('pasos', []):
+            print(paso)
+    
+    # Test case 3: Usando la función helper para convertir restricciones relacionales
+    elif sys.argv[1] == "3":
+        print("="*50)
+        print("TEST CASE 3: Usando función helper convertir_restricciones_relacionales()")
+        print("Restricciones en forma natural: y >= x, y <= 2x, x <= 30, y <= 20")
+        print("="*50)
+        
+        # Función objetivo
+        c = [1, 1]  # Z = x + y
+        
+        # Restricciones en forma natural (como las escribes)
+        restricciones_str = [
+            "y >= x",
+            "y <= 2x",
+            "x <= 30",
+            "y <= 20"
+        ]
+        
+        print("\nRestricciones originales (forma natural):")
+        for r in restricciones_str:
+            print(f"  - {r}")
+        
+        # Convertir a forma estándar usando la función helper
+        print("\nConvirtiendo a forma estándar...")
+        A, b, operadores = convertir_restricciones_relacionales(restricciones_str)
+        
+        print("\nRestricciones convertidas (forma estándar):")
+        for i, (a_row, b_val, op) in enumerate(zip(A, b, operadores), 1):
+            signo_y = '-' if a_row[1] < 0 else '+'
+            abs_y = abs(a_row[1])
+            print(f"  R{i}: {a_row[0]}x {signo_y} {abs_y}y {op} {b_val}")
+        
+        # Crear y resolver el problema
+        problema = MetodoGrafico(c, A, b, operadores, objetivo='max')
+        resultado = problema.resolver()
+        
+        print("\n" + "="*30)
+        print("RESULTADO:")
+        if resultado.get('status') == 'optimal':
+            print(f"Tipo de solución: {resultado.get('tipo_solucion')}")
+            print(f"Punto óptimo: {resultado.get('punto_optimo')}")
+            print(f"Valor óptimo de Z: {resultado.get('z_optimo')}")
+            print(f"\nVértices factibles: {len(resultado.get('vertices', []))}")
+            for v in resultado.get('vertices', []):
+                print(f"  - ({v[0]:.2f}, {v[1]:.2f})")
+        elif resultado.get('status') == 'infeasible':
+            print(f"Tipo de solución: {resultado.get('tipo_solucion')}")
+            print(f"Explicación: {resultado.get('explicacion')}")
 
 
 

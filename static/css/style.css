@@ -1,12 +1,104 @@
 body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f7fa; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; }
 h1, h2, h3 { color: #2c3e50; }
 
+/* Tabs */
+.tabs-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #3498db;
+}
+
+.tab-button {
+    padding: 12px 25px;
+    background: #ecf0f1;
+    color: #2c3e50;
+    border: none;
+    border-radius: 5px 5px 0 0;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
+}
+
+.tab-button:hover {
+    background: #bdc3c7;
+}
+
+.tab-button.active {
+    background: #3498db;
+    color: white;
+    border-bottom: 3px solid #2980b9;
+}
+
+/* Restriction Mode Buttons (similar to tabs) */
+.restriction-mode-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.restriction-mode-btn {
+    padding: 8px 16px;
+    background: #ecf0f1;
+    color: #2c3e50;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.3s;
+    border-bottom: 2px solid transparent;
+}
+
+.restriction-mode-btn:hover {
+    background: #bdc3c7;
+}
+
+.restriction-mode-btn.active {
+    background: #3498db;
+    color: white;
+    border-bottom: 2px solid #2980b9;
+}
+
+.metodo-section {
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* Cajas principales */
 .box { background: white; padding: 25px; margin-bottom: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
 /* Botones e Inputs */
 input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 60px; text-align: center; }
 select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+/* Estilos específicos para dropdowns de operadores */
+.z-op-grafico, .z-op, .res-op-var, .res-op-var-simplex {
+    min-width: 50px;
+    width: auto !important;
+    padding: 4px 8px !important;
+    text-align: center !important;
+    font-size: 1.2em !important;
+    font-weight: bold !important;
+    background-color: white;
+    cursor: pointer;
+    -webkit-appearance: menulist;
+    -moz-appearance: menulist;
+    appearance: menulist;
+    line-height: 1.5;
+}
+.z-op-grafico option, .z-op option, .res-op-var option, .res-op-var-simplex option {
+    padding: 5px !important;
+    text-align: center !important;
+    font-size: 1.2em !important;
+    font-weight: bold !important;
+    min-height: 25px;
+    line-height: 1.5;
+}
 button { padding: 12px 25px; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 5px; font-size: 1em; transition: background 0.3s; }
 button:hover { background: #2980b9; }
 

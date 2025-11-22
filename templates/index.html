@@ -10,38 +10,158 @@
 </head>
 <body>
 
-    <h1>Calculadora Método Gráfico</h1>
+    <h1>Calculadora Programación Lineal</h1>
 
-    <div class="box">
-        <h3>1. Función Objetivo (Z)</h3>
-        <select id="objetivo">
-            <option value="max">Maximizar</option>
-            <option value="min">Minimizar</option>
-        </select>
-        Z = <input type="number" id="z_x" value="3" style="width: 50px;"> X + 
-            <input type="number" id="z_y" value="2" style="width: 50px;"> Y
+    <!-- Tabs para cambiar entre métodos -->
+    <div class="tabs-container">
+        <button class="tab-button active" onclick="cambiarMetodo('grafico')">Método Gráfico</button>
+        <button class="tab-button" onclick="cambiarMetodo('simplex')">Método Simplex</button>
     </div>
 
-    <div class="box">
-        <h3>2. Restricciones</h3>
-        <div id="lista-restricciones">
-            <div class="fila-restriccion">
-                <input type="number" class="res-x" value="2" style="width: 50px;"> X + 
-                <input type="number" class="res-y" value="1" style="width: 50px;"> Y 
-                <select class="res-op"><option value="<=">&le;</option><option value=">=">&ge;</option></select>
-                <input type="number" class="res-val" value="100" style="width: 60px;">
+    <!-- Método Gráfico -->
+    <div id="metodo-grafico" class="metodo-section">
+        <div class="box">
+            <h3>1. Función Objetivo (Z)</h3>
+            <select id="objetivo">
+                <option value="max">Maximizar</option>
+                <option value="min">Minimizar</option>
+            </select>
+            <div id="z-coefs-container-grafico" style="margin-top: 10px;">
+                <span>Z = </span>
+                <input type="number" class="z-coef-grafico" id="z_x" value="3" style="width: 50px;" data-var="0">
+                <span> X </span>
+                <select class="z-op-grafico" id="z_op_y" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="z-coef-grafico" id="z_y" value="2" style="width: 50px;" data-var="1">
+                <span> Y</span>
             </div>
-            <div class="fila-restriccion">
-                <input type="number" class="res-x" value="1" style="width: 50px;"> X + 
-                <input type="number" class="res-y" value="1" style="width: 50px;"> Y 
-                <select class="res-op"><option value="<=">&le;</option><option value=">=">&ge;</option></select>
-                <input type="number" class="res-val" value="80" style="width: 60px;">
+            <br>
+            <div style="margin-top: 10px;">
+                <span style="font-size: 0.9em; color: #666;">Nota: El método gráfico solo visualiza 2 variables (X y Y)</span>
             </div>
         </div>
-        <br>
-        <button onclick="resolverProblema()">CALCULAR SOLUCIÓN</button>
+
+        <div class="box">
+            <!-- Título con botones de modo -->
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <h3 style="margin: 0;">2. Restricciones</h3>
+                <div class="restriction-mode-buttons">
+                    <button class="restriction-mode-btn active" onclick="cambiarModoRestricciones('coeficientes')" data-mode="coeficientes">
+                        Coeficientes
+                    </button>
+                    <button class="restriction-mode-btn" onclick="cambiarModoRestricciones('natural')" data-mode="natural">
+                        Forma Natural
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modo coeficientes (actual) -->
+            <div id="modo-coeficientes">
+                <div id="lista-restricciones">
+                <div class="fila-restriccion">
+                    <input type="number" class="res-x" value="2" style="width: 50px;"> X 
+                    <select class="res-op-var" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                        <option value="+">+</option>
+                        <option value="-">−</option>
+                    </select>
+                    <input type="number" class="res-y" value="1" style="width: 50px;"> Y 
+                    <select class="res-op">
+                        <option value="<=">&le;</option>
+                        <option value=">=">&ge;</option>
+                        <option value="=">=</option>
+                    </select>
+                    <input type="number" class="res-val" value="100" style="width: 60px;">
+                </div>
+                <div class="fila-restriccion">
+                    <input type="number" class="res-x" value="1" style="width: 50px;"> X 
+                    <select class="res-op-var" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                        <option value="+">+</option>
+                        <option value="-">−</option>
+                    </select>
+                    <input type="number" class="res-y" value="1" style="width: 50px;"> Y 
+                    <select class="res-op">
+                        <option value="<=">&le;</option>
+                        <option value=">=">&ge;</option>
+                        <option value="=">=</option>
+                    </select>
+                    <input type="number" class="res-val" value="80" style="width: 60px;">
+                </div>
+                </div>
+                <br>
+                <button onclick="agregarRestriccionGrafico()" style="margin-top: 10px; background: #3498db;">+ Agregar Restricción</button>
+                <button onclick="eliminarRestriccionGrafico()" style="margin-top: 10px; background: #e74c3c;">- Eliminar Restricción</button>
+            </div>
+            
+            <!-- Modo forma natural (nuevo) -->
+            <div id="modo-natural" style="display: none;">
+                <div style="margin-bottom: 10px;">
+                    <label for="restricciones-natural" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                        Ingresa las restricciones (una por línea):
+                    </label>
+                    <textarea 
+                        id="restricciones-natural" 
+                        rows="6" 
+                        style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid #ccc; border-radius: 4px;"
+                        placeholder="Ejemplos:&#10;y >= x&#10;y <= 2x&#10;x <= 30&#10;y <= 20&#10;x + y >= 10"
+                    ></textarea>
+                </div>
+                <div style="padding: 10px; background: #e8f4f8; border-radius: 4px; margin-bottom: 10px;">
+                    <strong>💡 Tips:</strong>
+                    <ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9em;">
+                        <li>Usa "x" y "y" para las variables</li>
+                        <li>Usa ">=", "<=", o "=" para los operadores</li>
+                        <li>Ejemplos: "y >= x", "y <= 2x", "x + y <= 10"</li>
+                        <li>Puedes combinar ambos modos: escribe en forma natural y luego cambia a coeficientes</li>
+                    </ul>
+                </div>
+                <button onclick="convertirRestriccionesNaturales()" style="margin-top: 10px; background: #16a085;">Convertir a Coeficientes</button>
+            </div>
+            
+            <br><br>
+            <button onclick="resolverProblema()">CALCULAR SOLUCIÓN</button>
+        </div>
     </div>
 
+    <!-- Método Simplex -->
+    <div id="metodo-simplex" class="metodo-section" style="display:none;">
+        <div class="box">
+            <h3>1. Función Objetivo (Z)</h3>
+            <select id="objetivo-simplex">
+                <option value="max">Maximizar</option>
+                <option value="min">Minimizar</option>
+            </select>
+            <div id="z-coefs-container" style="margin-top: 10px;">
+                <span>Z = </span>
+                <input type="number" class="z-coef" value="3" style="width: 50px;" data-var="0">
+                <span> X₁ </span>
+                <select class="z-op" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="z-coef" value="2" style="width: 50px;" data-var="1">
+                <span> X₂</span>
+            </div>
+            <br>
+            <button onclick="agregarVariableSimplex()" style="margin-top: 10px; background: #27ae60;">+ Agregar Variable</button>
+            <button onclick="eliminarVariableSimplex()" style="margin-top: 10px; background: #e74c3c;">- Eliminar Variable</button>
+        </div>
+
+        <div class="box">
+            <h3>2. Restricciones</h3>
+            <div id="lista-restricciones-simplex">
+                <!-- Las restricciones iniciales se agregarán dinámicamente -->
+            </div>
+            <br>
+            <button onclick="agregarRestriccionSimplex()" style="margin-top: 10px; background: #3498db;">+ Agregar Restricción</button>
+            <button onclick="eliminarRestriccionSimplex()" style="margin-top: 10px; background: #e74c3c;">- Eliminar Restricción</button>
+            <br><br>
+            <button onclick="resolverSimplex()">CALCULAR SOLUCIÓN (SIMPLEX)</button>
+        </div>
+    </div>
+
+    <!-- Resultados Método Gráfico -->
     <div class="box" id="resultados" style="display:none;">
         
         <div class="calculations-header">
@@ -74,6 +194,31 @@
             <h2 id="titulo-tipo-solucion" style="margin-top:0; color: #2c3e50;">Solución Final</h2>
             <p id="texto-explicacion" style="font-size: 1.1em; line-height: 1.5; color: #444;"></p>
             <div id="caja-resultado-final" class="resultado-final-box" style="margin-top: 15px; font-size: 1.2em;"></div>
+        </div>
+
+    </div>
+
+    <!-- Resultados Método Simplex -->
+    <div class="box" id="resultados-simplex" style="display:none;">
+        
+        <div class="calculations-header">
+            <h3 style="display: inline-block; margin: 0; border-bottom: 3px solid #7f8c8d;">
+                Pasos del Algoritmo Simplex
+            </h3>
+            <button id="toggle-calculations-simplex" class="toggle-btn" onclick="toggleCalculationsSimplex()">
+                <span id="toggle-icon-simplex">▼</span> Ver Detalles
+            </button>
+        </div>
+        <div id="calculations-summary-simplex" class="calculations-summary"></div>
+        <div id="log-container-simplex" class="timeline" style="display:none;"></div>
+
+        <h3><span style="border-bottom: 3px solid #9b59b6;">Tablas del Simplex</span></h3>
+        <div id="tablas-simplex-container"></div>
+
+        <div id="analisis-box-simplex" style="margin-top: 30px; padding: 20px; border-left: 6px solid #2c3e50; background: #eef2f3; border-radius: 5px;">
+            <h2 id="titulo-tipo-solucion-simplex" style="margin-top:0; color: #2c3e50;">Solución Final</h2>
+            <p id="texto-explicacion-simplex" style="font-size: 1.1em; line-height: 1.5; color: #444;"></p>
+            <div id="caja-resultado-final-simplex" class="resultado-final-box" style="margin-top: 15px; font-size: 1.2em;"></div>
         </div>
 
     </div>
