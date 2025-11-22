@@ -339,14 +339,23 @@ async function resolverProblema() {
     const zOpsRecalc = Array.from(document.querySelectorAll('.z-op-grafico')).map(select => select.value);
     const zCoefsRecalc = Array.from(document.querySelectorAll('.z-coef-grafico')).map(input => parseFloat(input.value || 0));
     let z_y_recalc = zCoefsRecalc[1];
+    const signo_y = zOpsRecalc.length > 0 && zOpsRecalc[0] === '-' ? '-' : '+';
     if (zOpsRecalc.length > 0 && zOpsRecalc[0] === '-') {
         z_y_recalc = -z_y_recalc;
     }
     
+    const coef_x = zCoefsRecalc[0];
+    const coef_y_abs = Math.abs(zCoefsRecalc[1]);
+    
     datos.vertices.forEach(v => {
         const x = v[0];
         const y = v[1];
-        const z_calc = (parseFloat(zCoefsRecalc[0]) * x) + (z_y_recalc * y);
+        const z_calc = (coef_x * x) + (z_y_recalc * y);
+        
+        // Calcular paso a paso para mostrar
+        const termino_x = coef_x * x;
+        const termino_y = z_y_recalc * y;
+        const calculo_paso = `${coef_x}·${x.toFixed(2)} ${signo_y} ${coef_y_abs}·${y.toFixed(2)} = ${termino_x.toFixed(2)} ${signo_y} ${Math.abs(termino_y).toFixed(2)} = ${z_calc.toFixed(2)}`;
         
         const tr = document.createElement('tr');
         
@@ -356,9 +365,10 @@ async function resolverProblema() {
         if (esGanador) tr.className = 'fila-optima';
 
         tr.innerHTML = `
-            <td>(${x}, ${y})</td>
-            <td>${z_calc.toFixed(2)}</td>
-            <td>${esGanador ? '★ ÓPTIMO' : ''}</td>
+            <td>(${x.toFixed(2)}, ${y.toFixed(2)})</td>
+            <td><strong>${z_calc.toFixed(2)}</strong></td>
+            <td class="calculo-z" title="Cálculo detallado: ${calculo_paso}">${calculo_paso}</td>
+            <td>${esGanador ? '<span style="color: #27ae60; font-weight: bold;">★ ÓPTIMO</span>' : ''}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -1334,21 +1344,44 @@ function mostrarTablasSimplex(datos) {
     const container = document.getElementById('tablas-simplex-container');
     container.innerHTML = '';
     
+    console.log('Datos recibidos:', datos);
+    console.log('Tablas:', datos.tablas);
+    
     if (!datos.tablas || datos.tablas.length === 0) {
-        container.innerHTML = '<p>No hay tablas para mostrar.</p>';
+        container.innerHTML = '<p style="color: red;">No hay tablas para mostrar. (datos.tablas está vacío o no existe)</p>';
         return;
     }
+    
+    // Agregar explicación general sobre las tablas
+    const explicacionGeneral = document.createElement('div');
+    explicacionGeneral.style.cssText = 'margin-bottom: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #9b59b6;';
+    explicacionGeneral.innerHTML = `
+        <strong>💡 Explicación de las Tablas del Simplex:</strong>
+        <ul style="margin: 10px 0 0 20px; padding: 0;">
+            <li><strong>Variables Básicas:</strong> Variables que están en la solución actual (tienen valor distinto de cero).</li>
+            <li><strong>Fila Z:</strong> Muestra los coeficientes reducidos. Valores negativos (max) o positivos (min) indican que se puede mejorar la solución.</li>
+            <li><strong>Columna Solución:</strong> Muestra el valor actual de las variables básicas y el valor de Z.</li>
+            <li><strong>Elemento Pivote:</strong> Intersección de la variable entrante y la fila de la variable saliente. Se usa para realizar el pivoteo.</li>
+            <li><strong>Ratios:</strong> Se calculan dividiendo la columna Solución entre la columna de la variable entrante. El menor ratio determina la variable saliente.</li>
+        </ul>
+    `;
+    container.appendChild(explicacionGeneral);
     
     datos.tablas.forEach((tablaInfo, idx) => {
         const tablaDiv = document.createElement('div');
         tablaDiv.className = 'simplex-table-container';
         tablaDiv.style.marginBottom = '30px';
+        tablaDiv.style.background = 'white';
+        tablaDiv.style.padding = '20px';
+        tablaDiv.style.borderRadius = '10px';
+        tablaDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
         
         const titulo = document.createElement('h4');
         titulo.textContent = `Iteración ${tablaInfo.iteracion}`;
         titulo.style.color = '#9b59b6';
         titulo.style.borderBottom = '2px solid #9b59b6';
-        titulo.style.paddingBottom = '5px';
+        titulo.style.paddingBottom = '10px';
+        titulo.style.marginBottom = '15px';
         tablaDiv.appendChild(titulo);
         
         if (tablaInfo.explicacion) {
@@ -1356,7 +1389,47 @@ function mostrarTablasSimplex(datos) {
             explicacion.textContent = tablaInfo.explicacion;
             explicacion.style.fontStyle = 'italic';
             explicacion.style.color = '#666';
+            explicacion.style.marginBottom = '15px';
+            explicacion.style.padding = '10px';
+            explicacion.style.background = '#f8f9fa';
+            explicacion.style.borderRadius = '5px';
             tablaDiv.appendChild(explicacion);
+        }
+        
+        // Mostrar información sobre variable entrante/saliente si está disponible
+        if (tablaInfo.col_entrante !== undefined && tablaInfo.fila_saliente !== undefined) {
+            const infoDiv = document.createElement('div');
+            infoDiv.style.cssText = 'margin-bottom: 15px; padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 5px;';
+            const nombresCols = tablaInfo.nombres_columnas || [];
+            const varEntrante = nombresCols[tablaInfo.col_entrante] || `Columna ${tablaInfo.col_entrante + 1}`;
+            const varSaliente = tablaInfo.variables_basicas && tablaInfo.variables_basicas[tablaInfo.fila_saliente] 
+                ? tablaInfo.variables_basicas[tablaInfo.fila_saliente] 
+                : `Fila ${tablaInfo.fila_saliente + 1}`;
+            
+            infoDiv.innerHTML = `
+                <strong>🔄 Operación de Pivoteo:</strong><br>
+                • <strong>Variable Entrante:</strong> ${varEntrante} (mejora la solución)<br>
+                • <strong>Variable Saliente:</strong> ${varSaliente} (sale de la base)<br>
+                ${tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null ? `• <strong>Elemento Pivote:</strong> ${tablaInfo.elemento_pivote.toFixed(4)}` : ''}
+            `;
+            tablaDiv.appendChild(infoDiv);
+        }
+        
+        // Mostrar ratios si están disponibles
+        if (tablaInfo.ratios && tablaInfo.ratios.length > 0) {
+            const ratiosDiv = document.createElement('div');
+            ratiosDiv.style.cssText = 'margin-bottom: 15px; padding: 12px; background: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 5px;';
+            let ratiosHtml = '<strong>📊 Ratios (Solución ÷ Variable Entrante):</strong><br>';
+            tablaInfo.ratios.forEach((ratio, idx) => {
+                const varBasica = tablaInfo.variables_basicas && tablaInfo.variables_basicas[idx] 
+                    ? tablaInfo.variables_basicas[idx] 
+                    : `Fila ${idx + 1}`;
+                const ratioStr = ratio === Infinity ? '∞' : ratio.toFixed(4);
+                const esMinimo = ratio !== Infinity && ratio === Math.min(...tablaInfo.ratios.filter(r => r !== Infinity));
+                ratiosHtml += `• ${varBasica}: ${ratioStr} ${esMinimo ? '<strong style="color: #27ae60;">(Mínimo → Variable Saliente)</strong>' : ''}<br>`;
+            });
+            ratiosDiv.innerHTML = ratiosHtml;
+            tablaDiv.appendChild(ratiosDiv);
         }
         
         const tabla = document.createElement('table');
@@ -1364,6 +1437,7 @@ function mostrarTablasSimplex(datos) {
         tabla.style.width = '100%';
         tabla.style.marginTop = '15px';
         tabla.style.borderCollapse = 'collapse';
+        tabla.style.fontSize = '0.95em';
         
         // Crear encabezados
         const thead = document.createElement('thead');
@@ -1371,21 +1445,47 @@ function mostrarTablasSimplex(datos) {
         headerRow.style.background = '#9b59b6';
         headerRow.style.color = 'white';
         
+        // Columna de variables básicas
+        const thVB = document.createElement('th');
+        thVB.textContent = 'VB';
+        thVB.title = 'Variables Básicas';
+        thVB.style.padding = '10px';
+        thVB.style.border = '1px solid #ddd';
+        thVB.style.textAlign = 'center';
+        thVB.style.fontWeight = 'bold';
+        headerRow.appendChild(thVB);
+        
         // Encabezados de variables
         const numVars = tablaInfo.tabla[0].length - 1;
+        const nombresColumnas = tablaInfo.nombres_columnas || [];
         for (let i = 0; i < numVars; i++) {
             const th = document.createElement('th');
-            th.textContent = `x${i+1}`;
+            const nombreVar = nombresColumnas[i] || `x${i+1}`;
+            th.textContent = nombreVar;
             th.style.padding = '10px';
             th.style.border = '1px solid #ddd';
+            th.style.textAlign = 'center';
+            th.style.fontWeight = 'bold';
+            
+            // Resaltar columna entrante (solo si no es la tabla inicial)
+            if (tablaInfo.col_entrante !== undefined && tablaInfo.col_entrante !== null && 
+                tablaInfo.col_entrante === i) {
+                th.style.background = '#ffc107';
+                th.style.color = '#000';
+                th.title = 'Variable Entrante';
+            }
+            
             headerRow.appendChild(th);
         }
         
         // Encabezado de solución
         const thSol = document.createElement('th');
         thSol.textContent = 'Solución';
+        thSol.title = 'Valores de las variables básicas y Z';
         thSol.style.padding = '10px';
         thSol.style.border = '1px solid #ddd';
+        thSol.style.textAlign = 'center';
+        thSol.style.fontWeight = 'bold';
         headerRow.appendChild(thSol);
         
         thead.appendChild(headerRow);
@@ -1393,22 +1493,78 @@ function mostrarTablasSimplex(datos) {
         
         // Crear cuerpo
         const tbody = document.createElement('tbody');
+        const numFilas = tablaInfo.tabla.length - 1; // Excluir fila Z
+        
         tablaInfo.tabla.forEach((fila, filaIdx) => {
             const tr = document.createElement('tr');
-            if (filaIdx === tablaInfo.tabla.length - 1) {
+            // Z está ahora en la primera fila (índice 0), no en la última
+            const esFilaZ = filaIdx === 0;
+            
+            if (esFilaZ) {
                 tr.style.background = '#e8d5f2';
                 tr.style.fontWeight = 'bold';
+            } else {
+                // Resaltar fila saliente
+                // Las restricciones están en índices 1 a num_rest, así que fila_saliente corresponde a filaIdx - 1
+                if (tablaInfo.fila_saliente !== undefined && tablaInfo.fila_saliente !== null && 
+                    tablaInfo.fila_saliente === filaIdx - 1) {
+                    tr.style.background = '#fff3cd';
+                }
             }
             
+            // Columna de variable básica
+            const tdVB = document.createElement('td');
+            if (esFilaZ) {
+                tdVB.textContent = 'Z';
+                tdVB.style.fontWeight = 'bold';
+            } else {
+                // Las variables básicas están indexadas desde 0, pero las restricciones empiezan en filaIdx 1
+                const idxVarBasica = filaIdx - 1;  // Ajustar índice porque Z está en 0
+                const varBasica = tablaInfo.variables_basicas && idxVarBasica >= 0 && 
+                    idxVarBasica < tablaInfo.variables_basicas.length
+                    ? tablaInfo.variables_basicas[idxVarBasica] 
+                    : '-';
+                tdVB.textContent = varBasica;
+                tdVB.style.fontWeight = 'bold';
+                tdVB.style.color = '#9b59b6';
+            }
+            tdVB.style.padding = '8px';
+            tdVB.style.border = '1px solid #ddd';
+            tdVB.style.textAlign = 'center';
+            tdVB.style.background = esFilaZ ? '#e8d5f2' : '#f8f9fa';
+            tr.appendChild(tdVB);
+            
+            // Valores de la fila
             fila.forEach((valor, colIdx) => {
                 const td = document.createElement('td');
                 td.textContent = valor.toFixed(4);
                 td.style.padding = '8px';
                 td.style.border = '1px solid #ddd';
                 td.style.textAlign = 'center';
+                
+                // Resaltar columna de solución
                 if (colIdx === numVars) {
                     td.style.background = '#f0f0f0';
+                    td.style.fontWeight = 'bold';
                 }
+                
+                // Resaltar elemento pivote
+                // Las restricciones están en índices 1 a num_rest, así que fila_saliente corresponde a filaIdx - 1
+                if (tablaInfo.fila_saliente !== undefined && tablaInfo.fila_saliente !== null &&
+                    tablaInfo.fila_saliente === filaIdx - 1 && tablaInfo.col_entrante === colIdx && 
+                    tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null) {
+                    td.style.background = '#ffc107';
+                    td.style.color = '#000';
+                    td.style.fontWeight = 'bold';
+                    td.style.border = '3px solid #ff9800';
+                    td.title = `Elemento Pivote: ${tablaInfo.elemento_pivote.toFixed(4)}`;
+                }
+                
+                // Resaltar columna entrante (solo en filas de restricciones, no en Z)
+                if (tablaInfo.col_entrante === colIdx && !esFilaZ) {
+                    td.style.background = '#fff3cd';
+                }
+                
                 tr.appendChild(td);
             });
             

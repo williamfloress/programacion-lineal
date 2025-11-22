@@ -487,3 +487,35 @@ button:hover { background: #2980b9; }
     line-height: 1.6;
 }
 
+/* Estilos para tabla de vértices mejorada */
+.calculo-z {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #555;
+    padding: 5px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow-x: auto;
+}
+
+.calculo-z:hover {
+    background: #e9ecef;
+    cursor: help;
+}
+
+/* Estilos para tablas Simplex mejoradas */
+.simplex-table-container {
+    page-break-inside: avoid;
+}
+
+.simplex-table th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.simplex-table td {
+    transition: background-color 0.2s;
+}
+
