@@ -1438,9 +1438,13 @@ function mostrarTablasSimplex(datos) {
         tablaDiv.className = 'simplex-table-container';
         tablaDiv.style.marginBottom = '30px';
         tablaDiv.style.background = 'white';
-        tablaDiv.style.padding = '20px';
+        tablaDiv.style.padding = '15px 10px'; // Reducido padding horizontal para mejor scroll
         tablaDiv.style.borderRadius = '10px';
         tablaDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        // Asegurar que el overflow funcione
+        tablaDiv.style.overflowX = 'auto';
+        tablaDiv.style.overflowY = 'visible';
+        tablaDiv.style.webkitOverflowScrolling = 'touch';
         
         const titulo = document.createElement('h4');
         titulo.textContent = `Iteración ${tablaInfo.iteracion}`;
@@ -1498,12 +1502,18 @@ function mostrarTablasSimplex(datos) {
             tablaDiv.appendChild(ratiosDiv);
         }
         
+        // Crear wrapper interno para scroll
+        const tableWrapper = document.createElement('div');
+        tableWrapper.style.cssText = 'overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; margin-top: 15px; width: 100%;';
+        
         const tabla = document.createElement('table');
         tabla.className = 'simplex-table';
-        tabla.style.width = '100%';
-        tabla.style.marginTop = '15px';
+        tabla.style.width = 'auto'; // Cambiar a auto para que se expanda según contenido
+        tabla.style.minWidth = '500px'; // Ancho mínimo
+        tabla.style.marginTop = '0';
         tabla.style.borderCollapse = 'collapse';
         tabla.style.fontSize = '0.95em';
+        tabla.style.margin = '0 auto'; // Centrar la tabla
         
         // Crear encabezados
         const thead = document.createElement('thead');
@@ -1638,7 +1648,9 @@ function mostrarTablasSimplex(datos) {
         });
         
         tabla.appendChild(tbody);
-        tablaDiv.appendChild(tabla);
+        // Agregar tabla al wrapper y wrapper al contenedor
+        tableWrapper.appendChild(tabla);
+        tablaDiv.appendChild(tableWrapper);
         container.appendChild(tablaDiv);
     });
 }
