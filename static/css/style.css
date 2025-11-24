@@ -1,4 +1,14 @@
-body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f7fa; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; }
+body { 
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    background-color: #f5f7fa; 
+    color: #333; 
+    max-width: 900px; 
+    margin: 0 auto; 
+    padding: 20px; 
+    -webkit-text-size-adjust: 100%; /* Previene zoom automático en iOS */
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
 h1, h2, h3 { color: #2c3e50; }
 
 /* Tabs */
@@ -33,12 +43,14 @@ h1, h2, h3 { color: #2c3e50; }
 }
 
 /* Restriction Mode Buttons (similar to tabs) */
-.restriction-mode-buttons {
+.restriction-mode-buttons,
+.restriction-mode-buttons-simplex {
     display: flex;
     gap: 5px;
 }
 
-.restriction-mode-btn {
+.restriction-mode-btn,
+.restriction-mode-btn-simplex {
     padding: 8px 16px;
     background: #ecf0f1;
     color: #2c3e50;
@@ -51,11 +63,42 @@ h1, h2, h3 { color: #2c3e50; }
     border-bottom: 2px solid transparent;
 }
 
-.restriction-mode-btn:hover {
+.restriction-mode-btn:hover,
+.restriction-mode-btn-simplex:hover {
     background: #bdc3c7;
 }
 
-.restriction-mode-btn.active {
+.restriction-mode-btn.active,
+.restriction-mode-btn-simplex.active {
+    background: #3498db;
+    color: white;
+    border-bottom: 2px solid #2980b9;
+}
+
+/* Restriction Mode Buttons for Simplex */
+.restriction-mode-buttons-simplex {
+    display: flex;
+    gap: 5px;
+}
+
+.restriction-mode-btn-simplex {
+    padding: 8px 16px;
+    background: #ecf0f1;
+    color: #2c3e50;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.3s;
+    border-bottom: 2px solid transparent;
+}
+
+.restriction-mode-btn-simplex:hover {
+    background: #bdc3c7;
+}
+
+.restriction-mode-btn-simplex.active {
     background: #3498db;
     color: white;
     border-bottom: 2px solid #2980b9;
@@ -517,5 +560,551 @@ button:hover { background: #2980b9; }
 
 .simplex-table td {
     transition: background-color 0.2s;
+}
+
+/* ========================================
+   MEDIA QUERIES PARA DISPOSITIVOS MÓVILES
+   ======================================== */
+
+/* iPhone XR específico (414px) y similares */
+@media screen and (max-width: 480px) {
+    body {
+        padding: 12px;
+        font-size: 14px; /* Reducido para mejor ajuste en móvil */
+        max-width: 100%;
+    }
+    
+    h1 {
+        font-size: 1.4em;
+        margin-bottom: 14px;
+        line-height: 1.2;
+    }
+    
+    h2 {
+        font-size: 1.25em;
+    }
+    
+    h3 {
+        font-size: 1.1em;
+        margin-bottom: 10px;
+    }
+    
+    /* Tabs optimizados para iPhone XR */
+    .tabs-container {
+        gap: 8px;
+        margin-bottom: 20px;
+        border-bottom: 3px solid #3498db;
+    }
+    
+    .tab-button {
+        padding: 16px 18px;
+        font-size: 1.05em;
+        flex: 1;
+        min-height: 50px;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    /* Restriction mode buttons - mejor layout */
+    .restriction-mode-buttons,
+    .restriction-mode-buttons-simplex {
+        flex-direction: row;
+        gap: 6px;
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .restriction-mode-btn,
+    .restriction-mode-btn-simplex {
+        padding: 10px 14px;
+        font-size: 0.9em;
+        flex: 1;
+        min-height: 44px;
+    }
+    
+    /* Cajas principales - mejor padding */
+    .box {
+        padding: 20px 16px;
+        margin-bottom: 18px;
+        border-radius: 12px;
+    }
+    
+    /* Inputs optimizados para iPhone XR - más compactos */
+    input[type="number"] {
+        padding: 8px 6px !important;
+        font-size: 0.95em !important;
+        width: 55px !important;
+        min-height: 42px !important;
+        border-radius: 6px !important;
+        border: 2px solid #ddd !important;
+        box-sizing: border-box;
+    }
+    
+    input[type="number"]:focus {
+        border-color: #3498db !important;
+        outline: none;
+    }
+    
+    /* Sobrescribir estilos inline específicos */
+    .z-coef-grafico[style*="width: 50px"],
+    .res-x[style*="width: 50px"],
+    .res-y[style*="width: 50px"],
+    .res-val[style*="width: 60px"] {
+        width: 55px !important;
+        min-height: 42px !important;
+        font-size: 0.95em !important;
+    }
+    
+    /* Select más compacto */
+    select {
+        padding: 8px 8px;
+        font-size: 0.95em;
+        min-height: 42px;
+        border-radius: 6px;
+        border: 2px solid #ddd;
+    }
+    
+    /* Dropdowns de operadores - más compactos */
+    .z-op-grafico, .z-op, .res-op-var, .res-op-var-simplex {
+        min-width: 40px !important;
+        width: 42px !important;
+        min-height: 42px !important;
+        padding: 6px 4px !important;
+        font-size: 1.1em !important;
+        border-radius: 6px !important;
+        border: 2px solid #ddd !important;
+        margin: 0 3px !important;
+        box-sizing: border-box;
+    }
+    
+    /* Sobrescribir estilos inline de dropdowns */
+    .z-op-grafico[style*="width: 50px"],
+    .res-op-var[style*="width: 50px"] {
+        width: 42px !important;
+        min-width: 40px !important;
+        min-height: 42px !important;
+    }
+    
+    .res-op {
+        min-height: 42px;
+        font-size: 0.95em;
+        padding: 8px 8px;
+        border-radius: 6px;
+    }
+    
+    /* Botones optimizados */
+    button {
+        padding: 12px 20px;
+        font-size: 1em;
+        min-height: 44px;
+        margin: 8px 0;
+        width: 100%;
+        display: block;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    
+    /* Función objetivo - mantener en línea si 2 variables */
+    #z-coefs-container-grafico, #z-coefs-container {
+        display: flex !important;
+        flex-wrap: nowrap !important; /* Mantener en línea */
+        align-items: center !important;
+        gap: 4px !important;
+        font-size: 1em !important;
+        line-height: 1.4 !important;
+        margin-top: 8px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    #z-coefs-container-grafico span, #z-coefs-container span {
+        font-size: 0.95em !important;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+    
+    .z-coef-grafico, .z-coef {
+        width: 55px !important;
+        min-height: 42px !important;
+        font-size: 0.95em !important;
+        padding: 8px 4px !important;
+    }
+    
+    #z-coefs-container-grafico input[type="number"],
+    #z-coefs-container input[type="number"] {
+        width: 55px !important;
+        min-height: 42px !important;
+        font-size: 0.95em !important;
+    }
+    
+    /* Filas de restricciones - mantener en línea para 2 variables */
+    .fila-restriccion {
+        padding: 10px !important;
+        flex-wrap: nowrap !important; /* Mantener en línea */
+        gap: 4px !important;
+        align-items: center !important;
+        border-radius: 8px !important;
+        margin-bottom: 10px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        background: #f9f9f9 !important;
+        border: 1px solid #e0e0e0 !important;
+    }
+    
+    .fila-restriccion span {
+        font-size: 0.95em !important;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+    
+    .fila-restriccion input,
+    .fila-restriccion select {
+        flex-shrink: 0;
+    }
+    
+    .fila-restriccion .res-x,
+    .fila-restriccion .res-y,
+    .fila-restriccion .res-val {
+        width: 55px !important;
+        min-height: 42px !important;
+        font-size: 0.95em !important;
+    }
+    
+    .fila-restriccion .res-op-var,
+    .fila-restriccion .res-op {
+        min-width: 40px !important;
+        width: 42px !important;
+        min-height: 42px !important;
+        font-size: 1em !important;
+        padding: 6px 4px !important;
+        margin: 0 3px !important;
+    }
+    
+    .fila-restriccion span {
+        font-size: 1em !important;
+        white-space: nowrap;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+    
+    .fila-restriccion input,
+    .fila-restriccion select {
+        flex-shrink: 0;
+    }
+    
+    /* Asegurar que los inputs en restricciones tengan buen tamaño */
+    .fila-restriccion input[type="number"],
+    .fila-restriccion .res-x,
+    .fila-restriccion .res-y,
+    .fila-restriccion .res-val {
+        width: 60px !important;
+        min-height: 44px !important;
+        font-size: 1em !important;
+    }
+    
+    /* Función objetivo - mantener en línea para 2 variables */
+    #z-coefs-container-grafico, #z-coefs-container {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-size: 1em !important;
+        line-height: 1.5 !important;
+        margin-top: 12px !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Si hay más de 2 variables, permitir wrap */
+    #z-coefs-container:has(input:nth-child(6)) {
+        flex-wrap: wrap !important;
+    }
+    
+    #z-coefs-container-grafico span, #z-coefs-container span {
+        font-size: 1em !important;
+        white-space: nowrap;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+    
+    .z-coef-grafico, .z-coef {
+        width: 60px !important;
+        min-height: 44px !important;
+        font-size: 1em !important;
+        padding: 10px 8px !important;
+        flex-shrink: 0;
+    }
+    
+    /* Asegurar que todos los inputs en función objetivo sean del mismo tamaño */
+    #z-coefs-container-grafico input[type="number"],
+    #z-coefs-container input[type="number"] {
+        width: 60px !important;
+        min-height: 44px !important;
+    }
+    
+    /* Select objetivo */
+    #objetivo, #objetivo-simplex {
+        width: 100%;
+        min-height: 44px;
+        font-size: 1em;
+        margin-bottom: 12px;
+        padding: 10px;
+    }
+    
+    /* Tabla de resultados responsive */
+    .tabla-resultados {
+        font-size: 1em;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+    
+    .tabla-resultados th,
+    .tabla-resultados td {
+        padding: 14px 10px;
+        white-space: nowrap;
+        font-size: 0.95em;
+    }
+    
+    /* Gráfico optimizado */
+    #grafico {
+        height: 380px !important;
+        border-radius: 10px;
+        margin-top: 12px;
+    }
+    
+    /* Textarea más grande y legible */
+    textarea {
+        font-size: 1.1em;
+        padding: 14px;
+        min-height: 140px;
+        border-radius: 8px;
+        line-height: 1.6;
+        border: 2px solid #ddd;
+    }
+    
+    /* Cálculos header responsive */
+    .calculations-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .calculations-header h3 {
+        font-size: 1.2em;
+        width: 100%;
+        margin-bottom: 0;
+    }
+    
+    .toggle-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 14px;
+        font-size: 1em;
+        min-height: 50px;
+    }
+    
+    /* Cards y secciones más compactas */
+    .calculation-section {
+        margin-bottom: 16px;
+        border-radius: 10px;
+    }
+    
+    .section-header {
+        padding: 14px 16px;
+    }
+    
+    .section-content {
+        padding: 16px;
+    }
+    
+    /* Intersection cards en columna */
+    .intersection-group {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    /* Resultado final más legible */
+    .resultado-final-box {
+        padding: 24px 16px;
+        font-size: 1.3em;
+        border-radius: 12px;
+    }
+    
+    /* Restricciones modo natural */
+    #restricciones-natural {
+        font-size: 1.1em;
+        min-height: 160px;
+        line-height: 1.8;
+    }
+    
+    /* Header con botones de modo */
+    .box > div:first-child {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+    
+    /* Nota explicativa más legible */
+    span[style*="font-size: 0.9em"] {
+        font-size: 0.95em !important;
+        line-height: 1.5;
+        display: block;
+        margin-top: 8px;
+    }
+    
+    /* Mejor espaciado general */
+    br {
+        margin: 8px 0;
+    }
+    
+    /* Labels y textos mejorados */
+    label {
+        font-size: 1.05em;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+    }
+    
+    /* Asegurar que el contenedor principal use todo el ancho */
+    .metodo-section {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Mejoras en select objetivo */
+    #objetivo, #objetivo-simplex {
+        font-size: 1.1em !important;
+        padding: 14px !important;
+    }
+    
+    /* Tips box más legible */
+    div[style*="background: #e8f4f8"] {
+        padding: 14px !important;
+        font-size: 0.95em !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Placeholder más visible */
+    ::placeholder {
+        font-size: 1em;
+        opacity: 0.7;
+    }
+}
+
+/* Media query específica para iPhone XR (414px) */
+@media screen and (width: 414px) and (max-height: 896px) {
+    body {
+        padding: 10px;
+        font-size: 17px;
+    }
+    
+    .box {
+        padding: 18px 14px;
+    }
+    
+    input[type="number"] {
+        width: 70px;
+        font-size: 1.1em;
+    }
+    
+    #z-coefs-container-grafico, #z-coefs-container {
+        font-size: 1.2em;
+        gap: 8px;
+    }
+}
+
+/* Tablets y pantallas medianas (481px - 768px) */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+    body {
+        padding: 20px 15px;
+    }
+    
+    .box {
+        padding: 25px 20px;
+    }
+    
+    input[type="number"] {
+        padding: 10px;
+        width: 65px;
+        min-height: 44px;
+    }
+    
+    select {
+        padding: 10px;
+        min-height: 44px;
+    }
+    
+    button {
+        padding: 12px 20px;
+        min-height: 44px;
+    }
+    
+    #grafico {
+        height: 400px !important;
+    }
+    
+    .tabla-resultados {
+        font-size: 0.95em;
+    }
+}
+
+/* Pantallas grandes pero con zoom (orientación landscape móvil) */
+@media screen and (max-width: 896px) and (orientation: landscape) {
+    #grafico {
+        height: 300px !important;
+    }
+    
+    body {
+        padding: 10px;
+    }
+    
+    .box {
+        padding: 15px;
+    }
+    
+    h1 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+    }
+}
+
+/* Mejoras adicionales para iPhone XR específicamente */
+@supports (-webkit-touch-callout: none) {
+    /* iOS específico */
+    input[type="number"],
+    select,
+    textarea {
+        -webkit-appearance: none;
+        border-radius: 8px;
+    }
+    
+    button {
+        -webkit-tap-highlight-color: rgba(52, 152, 219, 0.3);
+    }
+}
+
+/* Asegurar que los elementos interactivos sean fáciles de tocar */
+@media (pointer: coarse) {
+    /* Dispositivos táctiles */
+    input[type="number"],
+    select,
+    button,
+    .tab-button,
+    .restriction-mode-btn,
+    .toggle-btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Espaciado adicional entre elementos táctiles */
+    .fila-restriccion {
+        margin-bottom: 10px;
+    }
+    
+    button + button {
+        margin-top: 10px;
+    }
 }
 

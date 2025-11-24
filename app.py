@@ -88,6 +88,106 @@ def convertir_restricciones():
             'message': str(e)
         }), 400
 
+@app.route('/convertir-restricciones-simplex', methods=['POST'])
+def convertir_restricciones_simplex():
+    """Endpoint para convertir restricciones en forma natural a formato estándar para Simplex (múltiples variables)."""
+    import re
+    
+    data = request.json
+    restricciones_str = data.get('restricciones', [])
+    num_variables = data.get('num_variables', 2)
+    
+    try:
+        restricciones_convertidas = []
+        
+        for restriccion_str in restricciones_str:
+            restriccion = restriccion_str.strip().replace(" ", "")
+            
+            # Detectar operador
+            if ">=" in restriccion:
+                partes = restriccion.split(">=", 1)
+                op = ">="
+            elif "<=" in restriccion:
+                partes = restriccion.split("<=", 1)
+                op = "<="
+            elif "=" in restriccion and ">=" not in restriccion and "<=" not in restriccion:
+                partes = restriccion.split("=", 1)
+                op = "="
+            else:
+                raise ValueError(f"No se pudo detectar el operador en: {restriccion_str}")
+            
+            lado_izq = partes[0]
+            lado_der = partes[1]
+            
+            # Parsear lado izquierdo para obtener coeficientes
+            coefs = [0.0] * num_variables
+            
+            # Extraer todos los términos del lado izquierdo
+            # Patrón para encontrar términos como: "2x1", "-3x2", "x1", "-x2", etc.
+            patron = r'([+-]?)(\d*)(x\d+)'
+            matches = re.findall(patron, lado_izq)
+            
+            for signo, coef_str, var in matches:
+                # Extraer índice de variable (x1, x2, etc.)
+                var_match = re.match(r'x(\d+)', var)
+                if var_match:
+                    var_idx = int(var_match.group(1)) - 1  # Convertir a índice 0-based
+                    
+                    if var_idx >= num_variables:
+                        raise ValueError(f"Variable x{var_idx+1} excede el número de variables definidas ({num_variables})")
+                    
+                    # Calcular coeficiente
+                    coef = float(coef_str) if coef_str else 1.0
+                    if signo == '-':
+                        coef = -coef
+                    elif signo == '+' or not signo:
+                        # Si no hay signo al inicio y es el primer término, es positivo
+                        pass
+                    
+                    coefs[var_idx] = coef
+            
+            # Manejar términos sueltos sin variable (pasar al lado derecho)
+            # Si hay términos que no coinciden con el patrón, asumimos que son constantes
+            terminos_restantes = lado_izq
+            for signo, coef_str, var in matches:
+                terminos_restantes = terminos_restantes.replace(signo + coef_str + var, '', 1)
+            
+            # Parsear lado derecho para obtener el valor b
+            try:
+                b_val = float(lado_der)
+            except ValueError:
+                # Si el lado derecho tiene variables, mover al izquierdo
+                # Por simplicidad, asumimos que el lado derecho es solo un número
+                raise ValueError(f"El lado derecho debe ser un número en: {restriccion_str}")
+            
+            # Mover constantes del lado izquierdo al derecho
+            if terminos_restantes:
+                # Buscar números sueltos en el lado izquierdo
+                constantes = re.findall(r'([+-]?\d+\.?\d*)', terminos_restantes)
+                for const_str in constantes:
+                    try:
+                        const_val = float(const_str)
+                        b_val -= const_val  # Mover al lado derecho (cambiar signo)
+                    except:
+                        pass
+            
+            restricciones_convertidas.append({
+                'coefs': coefs,
+                'op': op,
+                'val': float(b_val),
+                'original': restriccion_str
+            })
+        
+        return jsonify({
+            'status': 'success',
+            'restricciones': restricciones_convertidas
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 400
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))

@@ -590,8 +590,19 @@ function cambiarMetodo(metodo) {
         
         // Inicializar simplex con una restricción si no hay ninguna
         const container = document.getElementById('lista-restricciones-simplex');
-        if (container.children.length === 0) {
-            agregarRestriccionSimplex();
+        if (!container) {
+            console.error('Error: No se encontró el contenedor de restricciones Simplex');
+            return;
+        }
+        
+        // Verificar si hay variables en la función objetivo antes de agregar restricción
+        const numVars = obtenerNumVariables();
+        if (numVars > 0 && container.children.length === 0) {
+            try {
+                agregarRestriccionSimplex();
+            } catch (error) {
+                console.error('Error al inicializar restricción Simplex:', error);
+            }
         }
     }
 }
@@ -1202,16 +1213,70 @@ async function resolverSimplex() {
         return;
     }
     
-    // Recolectar restricciones
-    const filas = document.querySelectorAll('.fila-restriccion-simplex');
+    // Verificar qué modo de entrada está activo
+    const modoActivoBtn = document.querySelector('.restriction-mode-btn-simplex.active');
+    const modoActivo = modoActivoBtn ? modoActivoBtn.getAttribute('data-mode') : 'coeficientes';
     let restricciones = [];
     
-    if (filas.length === 0) {
-        alert('Error: Debe agregar al menos una restricción.');
-        return;
-    }
-    
-    filas.forEach((fila, index) => {
+    if (modoActivo === 'natural') {
+        // Modo forma natural: convertir primero
+        const textarea = document.getElementById('restricciones-natural-simplex');
+        const texto = textarea.value.trim();
+        
+        if (!texto) {
+            alert('Error: Debe ingresar al menos una restricción en forma natural.');
+            return;
+        }
+        
+        // Dividir por líneas y limpiar
+        const restriccionesStr = texto.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+        
+        if (restriccionesStr.length === 0) {
+            alert('Error: No se encontraron restricciones válidas.');
+            return;
+        }
+        
+        try {
+            // Convertir a formato estándar
+            const respuesta = await fetch('/convertir-restricciones-simplex', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    restricciones: restriccionesStr,
+                    num_variables: numVarsObjetivo
+                })
+            });
+            
+            const datos = await respuesta.json();
+            
+            if (datos.status === 'error') {
+                alert(`Error al convertir restricciones: ${datos.message}`);
+                return;
+            }
+            
+            // Formatear restricciones para el solver
+            restricciones = datos.restricciones.map(rest => ({
+                coefs: rest.coefs,
+                op: rest.op,
+                val: rest.val
+            }));
+            
+        } catch (error) {
+            alert(`Error al convertir restricciones: ${error.message}`);
+            return;
+        }
+    } else {
+        // Modo coeficientes: usar el método actual
+        const filas = document.querySelectorAll('.fila-restriccion-simplex');
+        
+        if (filas.length === 0) {
+            alert('Error: Debe agregar al menos una restricción.');
+            return;
+        }
+        
+        filas.forEach((fila, index) => {
         const coefsInputs = Array.from(fila.querySelectorAll('.res-coef'));
         const opsInputs = Array.from(fila.querySelectorAll('.res-op-var-simplex'));
         
@@ -1246,12 +1311,13 @@ async function resolverSimplex() {
             return;
         }
         
-        restricciones.push({
-            coefs: coefs,
-            op: opSelect.value,
-            val: parseFloat(valInput.value || 0)
+            restricciones.push({
+                coefs: coefs,
+                op: opSelect.value,
+                val: parseFloat(valInput.value || 0)
+            });
         });
-    });
+    }
     
     // Validar que todas las restricciones tengan el mismo número de variables
     const todasTienenMismoNumero = restricciones.every(r => r.coefs.length === numVarsObjetivo);
@@ -1608,6 +1674,141 @@ function mostrarSolucionSimplex(datos) {
     }
 }
 
+// Cambiar entre modos de entrada de restricciones para Simplex
+function cambiarModoRestriccionesSimplex(modo) {
+    const modoCoef = document.getElementById('modo-coeficientes-simplex');
+    const modoNatural = document.getElementById('modo-natural-simplex');
+    
+    // Actualizar botones activos
+    const botones = document.querySelectorAll('.restriction-mode-btn-simplex');
+    botones.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-mode') === modo) {
+            btn.classList.add('active');
+        }
+    });
+    
+    if (modo === 'coeficientes') {
+        modoCoef.style.display = 'block';
+        modoNatural.style.display = 'none';
+    } else {
+        modoCoef.style.display = 'none';
+        modoNatural.style.display = 'block';
+    }
+}
+
+// Convertir restricciones naturales a coeficientes para Simplex
+async function convertirRestriccionesNaturalesSimplex() {
+    const textarea = document.getElementById('restricciones-natural-simplex');
+    const texto = textarea.value.trim();
+    
+    if (!texto) {
+        alert('Por favor, ingresa al menos una restricción.');
+        return;
+    }
+    
+    // Obtener número de variables del objetivo
+    const numVars = obtenerNumVariables();
+    if (numVars === 0) {
+        alert('Error: Primero debes definir al menos una variable en la función objetivo.');
+        return;
+    }
+    
+    // Dividir por líneas y limpiar
+    const restricciones = texto.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+    
+    if (restricciones.length === 0) {
+        alert('No se encontraron restricciones válidas.');
+        return;
+    }
+    
+    try {
+        // Llamar al endpoint de conversión para Simplex (necesitamos crearlo)
+        const respuesta = await fetch('/convertir-restricciones-simplex', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                restricciones: restricciones,
+                num_variables: numVars
+            })
+        });
+        
+        const datos = await respuesta.json();
+        
+        if (datos.status === 'error') {
+            alert(`Error al convertir restricciones: ${datos.message}`);
+            return;
+        }
+        
+        // Limpiar restricciones existentes
+        const container = document.getElementById('lista-restricciones-simplex');
+        container.innerHTML = '';
+        
+        // Agregar restricciones convertidas
+        datos.restricciones.forEach(rest => {
+            agregarRestriccionSimplexDesdeDatos(rest, numVars);
+        });
+        
+        // Cambiar a modo coeficientes y mostrar
+        cambiarModoRestriccionesSimplex('coeficientes');
+        
+        // Mostrar mensaje de éxito
+        const mensaje = document.createElement('div');
+        mensaje.style.cssText = 'margin-top: 10px; padding: 10px; background: #d4edda; color: #155724; border-radius: 4px;';
+        mensaje.textContent = `✓ ${datos.restricciones.length} restricción(es) convertida(s) exitosamente.`;
+        container.parentElement.insertBefore(mensaje, container.nextSibling);
+        
+        // Remover mensaje después de 3 segundos
+        setTimeout(() => {
+            mensaje.remove();
+        }, 3000);
+        
+    } catch (error) {
+        alert(`Error al convertir restricciones: ${error.message}`);
+    }
+}
+
+// Agregar restricción desde datos ya convertidos (para Simplex)
+function agregarRestriccionSimplexDesdeDatos(datos, numVars) {
+    const container = document.getElementById('lista-restricciones-simplex');
+    
+    const nuevaFila = document.createElement('div');
+    nuevaFila.className = 'fila-restriccion-simplex';
+    
+    let html = '';
+    for (let i = 0; i < numVars; i++) {
+        const coef = datos.coefs[i] || 0;
+        const subindice = numeroASubindice(i + 1);
+        const absCoef = Math.abs(coef);
+        
+        if (i === 0) {
+            html += `<input type="number" class="res-coef" value="${absCoef}" style="width: 50px;" data-var="${i}"> X${subindice} `;
+        } else {
+            // Determinar el signo del coeficiente para el dropdown
+            const signo = coef >= 0 ? '+' : '-';
+            html += `<select class="res-op-var-simplex" data-var="${i-1}" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1em;">
+                <option value="+" ${signo === '+' ? 'selected' : ''}>+</option>
+                <option value="-" ${signo === '-' ? 'selected' : ''}>-</option>
+            </select>`;
+            html += `<input type="number" class="res-coef" value="${absCoef}" style="width: 50px;" data-var="${i}"> X${subindice} `;
+        }
+    }
+    
+    html += `
+        <select class="res-op-simplex">
+            <option value="<=" ${datos.op === '<=' ? 'selected' : ''}>&le;</option>
+            <option value=">=" ${datos.op === '>=' ? 'selected' : ''}>&ge;</option>
+            <option value="=" ${datos.op === '=' ? 'selected' : ''}>=</option>
+        </select>
+        <input type="number" class="res-val-simplex" value="${datos.val}" style="width: 60px;">
+    `;
+    
+    nuevaFila.innerHTML = html;
+    container.appendChild(nuevaFila);
+}
+
 // Toggle para cálculos Simplex
 function toggleCalculationsSimplex() {
     const logContainer = document.getElementById('log-container-simplex');
@@ -1628,8 +1829,50 @@ function toggleCalculationsSimplex() {
 
 // Inicialización cuando la página carga
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar simplex con una restricción por defecto (solo si estamos en la pestaña simplex)
-    // No inicializamos aquí porque el método gráfico es el que se muestra por defecto
-    // La inicialización se hace cuando se cambia a la pestaña simplex
+    // Verificar que todos los elementos necesarios existan
+    try {
+        // Asegurar que el método gráfico esté visible por defecto
+        const metodoGrafico = document.getElementById('metodo-grafico');
+        const metodoSimplex = document.getElementById('metodo-simplex');
+        
+        if (!metodoGrafico) {
+            console.error('Error: No se encontró el elemento metodo-grafico');
+            return;
+        }
+        
+        if (!metodoSimplex) {
+            console.error('Error: No se encontró el elemento metodo-simplex');
+            return;
+        }
+        
+        // Asegurar estado inicial correcto
+        metodoGrafico.style.display = 'block';
+        metodoSimplex.style.display = 'none';
+        
+        // Ocultar resultados inicialmente
+        const resultadosGrafico = document.getElementById('resultados');
+        const resultadosSimplex = document.getElementById('resultados-simplex');
+        if (resultadosGrafico) resultadosGrafico.style.display = 'none';
+        if (resultadosSimplex) resultadosSimplex.style.display = 'none';
+        
+        // Verificar que las funciones críticas existan
+        if (typeof cambiarMetodo !== 'function') {
+            console.error('Error: función cambiarMetodo no está definida');
+        }
+        if (typeof agregarRestriccionSimplex !== 'function') {
+            console.error('Error: función agregarRestriccionSimplex no está definida');
+        }
+        if (typeof resolverProblema !== 'function') {
+            console.error('Error: función resolverProblema no está definida');
+        }
+        if (typeof resolverSimplex !== 'function') {
+            console.error('Error: función resolverSimplex no está definida');
+        }
+        
+        console.log('Aplicación cargada correctamente');
+    } catch (error) {
+        console.error('Error durante la inicialización:', error);
+        alert('Error al cargar la aplicación. Por favor, recarga la página. Error: ' + error.message);
+    }
 });
 

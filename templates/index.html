@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Calculadora Programación Lineal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
@@ -149,13 +152,54 @@
         </div>
 
         <div class="box">
-            <h3>2. Restricciones</h3>
-            <div id="lista-restricciones-simplex">
-                <!-- Las restricciones iniciales se agregarán dinámicamente -->
+            <!-- Título con botones de modo -->
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <h3 style="margin: 0;">2. Restricciones</h3>
+                <div class="restriction-mode-buttons-simplex">
+                    <button class="restriction-mode-btn-simplex active" onclick="cambiarModoRestriccionesSimplex('coeficientes')" data-mode="coeficientes">
+                        Coeficientes
+                    </button>
+                    <button class="restriction-mode-btn-simplex" onclick="cambiarModoRestriccionesSimplex('natural')" data-mode="natural">
+                        Forma Natural
+                    </button>
+                </div>
             </div>
-            <br>
-            <button onclick="agregarRestriccionSimplex()" style="margin-top: 10px; background: #3498db;">+ Agregar Restricción</button>
-            <button onclick="eliminarRestriccionSimplex()" style="margin-top: 10px; background: #e74c3c;">- Eliminar Restricción</button>
+            
+            <!-- Modo coeficientes (actual) -->
+            <div id="modo-coeficientes-simplex">
+                <div id="lista-restricciones-simplex">
+                    <!-- Las restricciones iniciales se agregarán dinámicamente -->
+                </div>
+                <br>
+                <button onclick="agregarRestriccionSimplex()" style="margin-top: 10px; background: #3498db;">+ Agregar Restricción</button>
+                <button onclick="eliminarRestriccionSimplex()" style="margin-top: 10px; background: #e74c3c;">- Eliminar Restricción</button>
+            </div>
+            
+            <!-- Modo forma natural (nuevo) -->
+            <div id="modo-natural-simplex" style="display: none;">
+                <div style="margin-bottom: 10px;">
+                    <label for="restricciones-natural-simplex" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                        Ingresa las restricciones (una por línea):
+                    </label>
+                    <textarea 
+                        id="restricciones-natural-simplex" 
+                        rows="6" 
+                        style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid #ccc; border-radius: 4px;"
+                        placeholder="Ejemplos:&#10;x1 + x2 <= 10&#10;2x1 + 3x2 >= 20&#10;x1 - x2 = 5&#10;x1 <= 30&#10;x2 >= 5"
+                    ></textarea>
+                </div>
+                <div style="padding: 10px; background: #e8f4f8; border-radius: 4px; margin-bottom: 10px;">
+                    <strong>💡 Tips:</strong>
+                    <ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9em;">
+                        <li>Usa "x1", "x2", "x3", etc. para las variables</li>
+                        <li>Usa ">=", "<=", o "=" para los operadores</li>
+                        <li>Ejemplos: "x1 + x2 <= 10", "2x1 + 3x2 >= 20", "x1 - x2 = 5"</li>
+                        <li>Puedes combinar ambos modos: escribe en forma natural y luego cambia a coeficientes</li>
+                    </ul>
+                </div>
+                <button onclick="convertirRestriccionesNaturalesSimplex()" style="margin-top: 10px; background: #16a085;">Convertir a Coeficientes</button>
+            </div>
+            
             <br><br>
             <button onclick="resolverSimplex()">CALCULAR SOLUCIÓN (SIMPLEX)</button>
         </div>
@@ -229,5 +273,12 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Verificación adicional de que todo se cargó
+        if (typeof resolverProblema === 'undefined') {
+            console.error('Error crítico: El script main.js no se cargó correctamente');
+            document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>Error al cargar la aplicación</h1><p>Por favor, recarga la página o verifica tu conexión a internet.</p></div>';
+        }
+    </script>
 </body>
 </html>

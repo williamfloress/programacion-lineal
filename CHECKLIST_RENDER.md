@@ -45,7 +45,7 @@ Este checklist te guiará paso a paso para desplegar tu aplicación de Programac
   ```
 
 - [ ] **Probar que funciona con Gunicorn (solo Linux/macOS)**
-  ```bash
+  ```bashimage.png
   # Desde el directorio del proyecto
   gunicorn app:app --bind 0.0.0.0:5000
   ```
