@@ -442,6 +442,9 @@ class MetodoSimplex:
         if isinstance(valor, (np.integer, np.int64, np.int32)):
             return int(valor)
         elif isinstance(valor, (np.floating, np.float64, np.float32)):
+            # Verificar si es infinito antes de convertir a float
+            if np.isinf(valor) or valor == float('inf') or valor == float('-inf'):
+                return None  # Usar None para representar infinito en JSON
             return float(valor)
         elif isinstance(valor, np.ndarray):
             return valor.tolist()
@@ -450,9 +453,9 @@ class MetodoSimplex:
         elif isinstance(valor, dict):
             return {k: self._convertir_a_nativo(v) for k, v in valor.items()}
         elif valor == np.inf or valor == float('inf'):
-            return float('inf')
+            return None  # Usar None para representar infinito en JSON
         elif valor == -np.inf or valor == float('-inf'):
-            return float('-inf')
+            return None  # Usar None para representar infinito negativo en JSON
         else:
             return valor
     
@@ -469,10 +472,10 @@ class MetodoSimplex:
         if ratios is not None:
             ratios_nativo = []
             for r in ratios:
-                if r == np.inf or r == float('inf'):
-                    ratios_nativo.append(float('inf'))
-                elif r == -np.inf or r == float('-inf'):
-                    ratios_nativo.append(float('-inf'))
+                if r == np.inf or r == float('inf') or (isinstance(r, (float, np.floating)) and np.isinf(r) and r > 0):
+                    ratios_nativo.append(None)  # Usar None para representar infinito en JSON
+                elif r == -np.inf or r == float('-inf') or (isinstance(r, (float, np.floating)) and np.isinf(r) and r < 0):
+                    ratios_nativo.append(None)  # Usar None para representar infinito negativo en JSON
                 else:
                     ratios_nativo.append(self._convertir_a_nativo(r))
         
@@ -719,10 +722,11 @@ class MetodoSimplex:
                     ratios.append(ratio)
                     self.registrar_paso(f"   {var_basica_actual}: {tabla[fila_rest, -1]:.4f} ÷ {tabla[fila_rest, col_entrante]:.4f} = {ratio:.4f}")
                 else:
-                    ratios.append(float('inf'))
+                    ratios.append(np.inf)  # Usar np.inf internamente
                     self.registrar_paso(f"   {var_basica_actual}: No se calcula (coeficiente ≤ 0 o muy pequeño)")
             
-            if all(r == float('inf') for r in ratios):
+            # Verificar si todos los ratios son infinito usando np.isinf
+            if all(np.isinf(r) for r in ratios):
                 self.registrar_paso("\n⚠ Problema no acotado: No se puede encontrar variable saliente")
                 self.registrar_paso("   Razón: Todas las filas tienen coeficientes no positivos en la columna entrante.")
                 self.registrar_paso("   Esto significa que {var_entrante_nombre} puede crecer indefinidamente sin violar restricciones.")
@@ -750,12 +754,19 @@ class MetodoSimplex:
             
             fila_saliente = int(np.argmin(ratios))
             ratio_minimo = ratios[fila_saliente]
-            ratio_minimo_float = float(ratio_minimo) if ratio_minimo != np.inf else float('inf')
+            # Convertir ratio_minimo a float para mostrar, manejando infinito
+            if np.isinf(ratio_minimo):
+                ratio_minimo_float = None  # Para JSON, pero para mostrar usaremos "∞"
+                ratio_minimo_str = "∞"
+            else:
+                ratio_minimo_float = float(ratio_minimo)
+                ratio_minimo_str = f"{ratio_minimo_float:.4f}"
             var_saliente_actual = variables_basicas[fila_saliente] if fila_saliente < len(variables_basicas) else f"Fila {fila_saliente + 1}"
             
             self.registrar_paso(f"\n📌 VARIABLE SALIENTE: {var_saliente_actual}")
-            self.registrar_paso(f"   Razón: Tiene el ratio mínimo ({ratio_minimo_float:.4f}).")
-            self.registrar_paso(f"   El ratio mínimo asegura que al hacer {var_entrante_nombre} = {ratio_minimo_float:.4f}, la variable {var_saliente_actual} se vuelve cero (sale de la base).")
+            self.registrar_paso(f"   Razón: Tiene el ratio mínimo ({ratio_minimo_str}).")
+            if not np.isinf(ratio_minimo):
+                self.registrar_paso(f"   El ratio mínimo asegura que al hacer {var_entrante_nombre} = {ratio_minimo_str}, la variable {var_saliente_actual} se vuelve cero (sale de la base).")
             
             # Guardar valor anterior de Z antes del pivoteo
             z_val_anterior = float(tabla[0, -1])
@@ -795,11 +806,14 @@ class MetodoSimplex:
             self.registrar_paso(f"\n✅ RESULTADO DE LA ITERACIÓN:")
             self.registrar_paso(f"   Valor anterior de Z: {z_val_anterior:.4f}")
             self.registrar_paso(f"   Nuevo valor de Z: {z_val:.4f}")
-            if ratio_minimo != float('inf'):
+            if not np.isinf(ratio_minimo):
                 mejora = z_val - z_val_anterior
                 self.registrar_paso(f"   Mejora en Z: {mejora:+.4f} ({'aumento' if mejora > 0 else 'disminución' if mejora < 0 else 'sin cambio'})")
             self.registrar_paso(f"   Nueva base: {', '.join(variables_basicas)}")
-            self.registrar_paso(f"   {var_entrante_nombre} ahora es básica (valor = {ratio_minimo_float:.4f}), {var_saliente_actual} sale de la base (valor = 0)")
+            if not np.isinf(ratio_minimo):
+                self.registrar_paso(f"   {var_entrante_nombre} ahora es básica (valor = {ratio_minimo_str}), {var_saliente_actual} sale de la base (valor = 0)")
+            else:
+                self.registrar_paso(f"   {var_entrante_nombre} ahora es básica, {var_saliente_actual} sale de la base (valor = 0)")
             
             # Generar nombres de columnas (mismo que antes)
             nombres_columnas = []

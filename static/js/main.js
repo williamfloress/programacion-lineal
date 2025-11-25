@@ -1494,8 +1494,12 @@ function mostrarTablasSimplex(datos) {
                 const varBasica = tablaInfo.variables_basicas && tablaInfo.variables_basicas[idx] 
                     ? tablaInfo.variables_basicas[idx] 
                     : `Fila ${idx + 1}`;
-                const ratioStr = ratio === Infinity ? '∞' : ratio.toFixed(4);
-                const esMinimo = ratio !== Infinity && ratio === Math.min(...tablaInfo.ratios.filter(r => r !== Infinity));
+                // Manejar None (null en JSON) como infinito
+                const esInfinito = ratio === null || ratio === Infinity || ratio === undefined;
+                const ratioStr = esInfinito ? '∞' : ratio.toFixed(4);
+                // Filtrar ratios finitos para encontrar el mínimo
+                const ratiosFinitos = tablaInfo.ratios.filter(r => r !== null && r !== Infinity && r !== undefined);
+                const esMinimo = !esInfinito && ratiosFinitos.length > 0 && ratio === Math.min(...ratiosFinitos);
                 ratiosHtml += `• ${varBasica}: ${ratioStr} ${esMinimo ? '<strong style="color: #27ae60;">(Mínimo → Variable Saliente)</strong>' : ''}<br>`;
             });
             ratiosDiv.innerHTML = ratiosHtml;
