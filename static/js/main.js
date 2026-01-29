@@ -472,16 +472,47 @@ function dibujarGrafica(datos, restricciones) {
         marker: {color: 'red', size: 12}
     });
 
-    // Configuración del Layout
+    // Configuración del Layout con soporte para dark mode
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const bgColor = currentTheme === 'dark' ? '#1a1a1a' : '#ffffff';
+    const textColor = currentTheme === 'dark' ? '#e0e0e0' : '#333';
+    const gridColor = currentTheme === 'dark' ? '#444' : '#ddd';
+    
     const layout = {
-        title: 'Método Gráfico',
-        xaxis: {range: [-1, rango], title: 'Variable X'},
-        yaxis: {range: [-1, rango], title: 'Variable Y'},
+        title: {
+            text: 'Método Gráfico',
+            font: { color: textColor }
+        },
+        xaxis: {
+            range: [-1, rango], 
+            title: { text: 'Variable X', font: { color: textColor } },
+            gridcolor: gridColor,
+            linecolor: gridColor,
+            zerolinecolor: gridColor,
+            tickfont: { color: textColor }
+        },
+        yaxis: {
+            range: [-1, rango], 
+            title: { text: 'Variable Y', font: { color: textColor } },
+            gridcolor: gridColor,
+            linecolor: gridColor,
+            zerolinecolor: gridColor,
+            tickfont: { color: textColor }
+        },
+        plot_bgcolor: bgColor,
+        paper_bgcolor: bgColor,
+        font: { color: textColor },
         showlegend: true,
-        hovermode: 'closest'
+        hovermode: 'closest',
+        legend: {
+            font: { color: textColor },
+            bgcolor: 'transparent'
+        },
+        autosize: true
     };
 
-    Plotly.newPlot('grafico', traces, layout);
+    const config = { responsive: true };
+    Plotly.newPlot('grafico', traces, layout, config);
 }
 
 // Función auxiliar matemática para ordenar puntos en sentido anti-horario
@@ -707,18 +738,18 @@ function agregarRestriccionGraficoDesdeDatos(datos) {
     const absY = Math.abs(datos.y);
     
     nuevaFila.innerHTML = `
-        <input type="number" class="res-x" value="${datos.x}" style="width: 50px;"> X 
+        <input type="number" class="res-x" value="${datos.x}" style="width: 50px;" inputmode="decimal" autocomplete="off"> X 
         <select class="res-op-var" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
             <option value="+" ${signoY === '+' ? 'selected' : ''}>+</option>
             <option value="-" ${signoY === '-' ? 'selected' : ''}>−</option>
         </select>
-        <input type="number" class="res-y" value="${absY}" style="width: 50px;"> Y 
+        <input type="number" class="res-y" value="${absY}" style="width: 50px;" inputmode="decimal" autocomplete="off"> Y 
         <select class="res-op">
             <option value="<=" ${datos.op === '<=' ? 'selected' : ''}>&le;</option>
             <option value=">=" ${datos.op === '>=' ? 'selected' : ''}>&ge;</option>
             <option value="=" ${datos.op === '=' ? 'selected' : ''}>=</option>
         </select>
-        <input type="number" class="res-val" value="${datos.val}" style="width: 60px;">
+        <input type="number" class="res-val" value="${datos.val}" style="width: 60px;" inputmode="decimal" autocomplete="off">
     `;
     
     container.appendChild(nuevaFila);
@@ -731,18 +762,18 @@ function agregarRestriccionGrafico() {
     const nuevaFila = document.createElement('div');
     nuevaFila.className = 'fila-restriccion';
     nuevaFila.innerHTML = `
-        <input type="number" class="res-x" value="1" style="width: 50px;"> X 
+        <input type="number" class="res-x" value="1" style="width: 50px;" inputmode="decimal" autocomplete="off"> X 
         <select class="res-op-var" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
             <option value="+">+</option>
             <option value="-">−</option>
         </select>
-        <input type="number" class="res-y" value="1" style="width: 50px;"> Y 
+        <input type="number" class="res-y" value="1" style="width: 50px;" inputmode="decimal" autocomplete="off"> Y 
         <select class="res-op">
             <option value="<=">&le;</option>
             <option value=">=">&ge;</option>
             <option value="=">=</option>
         </select>
-        <input type="number" class="res-val" value="10" style="width: 60px;">
+        <input type="number" class="res-val" value="10" style="width: 60px;" inputmode="decimal" autocomplete="off">
     `;
     
     container.appendChild(nuevaFila);
@@ -794,6 +825,8 @@ function agregarRestriccionSimplex() {
         input.value = '0';
         input.style.width = '50px';
         input.setAttribute('data-var', i);
+        input.setAttribute('inputmode', 'decimal');
+        input.setAttribute('autocomplete', 'off');
         nuevaFila.appendChild(input);
         
         const textoVar = document.createTextNode(` X${subindice}${esUltima ? ' ' : ' '}`);
@@ -834,6 +867,8 @@ function agregarRestriccionSimplex() {
     inputVal.className = 'res-val-simplex';
     inputVal.value = '0';
     inputVal.style.width = '60px';
+    inputVal.setAttribute('inputmode', 'decimal');
+    inputVal.setAttribute('autocomplete', 'off');
     nuevaFila.appendChild(inputVal);
     
     container.appendChild(nuevaFila);
@@ -914,6 +949,8 @@ function agregarVariableSimplex() {
     nuevoInput.value = '0';
     nuevoInput.style.width = '50px';
     nuevoInput.setAttribute('data-var', numVars);
+    nuevoInput.setAttribute('inputmode', 'decimal');
+    nuevoInput.setAttribute('autocomplete', 'off');
     
     const textoVar = document.createTextNode(` X${subindice}`);
     
@@ -957,9 +994,9 @@ function agregarVariableSimplex() {
                     nuevoCoef.value = '0';
                     nuevoCoef.style.width = '50px';
                     nuevoCoef.setAttribute('data-var', numVars);
+                    nuevoCoef.setAttribute('inputmode', 'decimal');
+                    nuevoCoef.setAttribute('autocomplete', 'off');
                     const textoVarRest = document.createTextNode(` X${subindice}`);
-                    
-                    // Insertar después del operador: primero el texto, luego el coeficiente (insertBefore inserta antes, así que el último se inserta más cerca de ref)
                     fila.insertBefore(nuevoCoef, operadorSelect.nextSibling);
                     fila.insertBefore(textoVarRest, operadorSelect.nextSibling);
                     break;
@@ -967,15 +1004,15 @@ function agregarVariableSimplex() {
                 nodoTexto = nodoTexto.nextSibling;
             }
         } else if (selectOp) {
-            // Si no hay coeficientes, agregar directamente antes del select de operador
             const nuevoCoef = document.createElement('input');
             nuevoCoef.type = 'number';
             nuevoCoef.className = 'res-coef';
             nuevoCoef.value = '0';
             nuevoCoef.style.width = '50px';
             nuevoCoef.setAttribute('data-var', numVars);
+            nuevoCoef.setAttribute('inputmode', 'decimal');
+            nuevoCoef.setAttribute('autocomplete', 'off');
             const textoVarRest = document.createTextNode(` X${subindice}`);
-            
             fila.insertBefore(nuevoCoef, selectOp);
             fila.insertBefore(textoVarRest, selectOp);
         }
@@ -1011,8 +1048,9 @@ function sincronizarRestriccion(fila, numVarsEsperado) {
                 nuevoCoef.value = '0';
                 nuevoCoef.style.width = '50px';
                 nuevoCoef.setAttribute('data-var', i);
+                nuevoCoef.setAttribute('inputmode', 'decimal');
+                nuevoCoef.setAttribute('autocomplete', 'off');
                 const textoVar = document.createTextNode(` X${subindice}`);
-                
                 if (nodoVariable) {
                     const puntoInsercion = nodoVariable.nextSibling;
                     fila.insertBefore(textoVar, puntoInsercion);
@@ -1800,15 +1838,14 @@ function agregarRestriccionSimplexDesdeDatos(datos, numVars) {
         const absCoef = Math.abs(coef);
         
         if (i === 0) {
-            html += `<input type="number" class="res-coef" value="${absCoef}" style="width: 50px;" data-var="${i}"> X${subindice} `;
+            html += `<input type="number" class="res-coef" value="${absCoef}" style="width: 50px;" data-var="${i}" inputmode="decimal" autocomplete="off"> X${subindice} `;
         } else {
-            // Determinar el signo del coeficiente para el dropdown
             const signo = coef >= 0 ? '+' : '-';
             html += `<select class="res-op-var-simplex" data-var="${i-1}" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1em;">
                 <option value="+" ${signo === '+' ? 'selected' : ''}>+</option>
                 <option value="-" ${signo === '-' ? 'selected' : ''}>-</option>
             </select>`;
-            html += `<input type="number" class="res-coef" value="${absCoef}" style="width: 50px;" data-var="${i}"> X${subindice} `;
+            html += `<input type="number" class="res-coef" value="${absCoef}" style="width: 50px;" data-var="${i}" inputmode="decimal" autocomplete="off"> X${subindice} `;
         }
     }
     
@@ -1818,7 +1855,7 @@ function agregarRestriccionSimplexDesdeDatos(datos, numVars) {
             <option value=">=" ${datos.op === '>=' ? 'selected' : ''}>&ge;</option>
             <option value="=" ${datos.op === '=' ? 'selected' : ''}>=</option>
         </select>
-        <input type="number" class="res-val-simplex" value="${datos.val}" style="width: 60px;">
+        <input type="number" class="res-val-simplex" value="${datos.val}" style="width: 60px;" inputmode="decimal" autocomplete="off">
     `;
     
     nuevaFila.innerHTML = html;
@@ -1885,10 +1922,133 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error: función resolverSimplex no está definida');
         }
         
+        // Responsive Plotly: resize chart on viewport/orientation change (Checkpoint 2)
+        let resizeTimeout;
+        function debouncedPlotlyResize() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                const el = document.getElementById('grafico');
+                if (el && el.querySelector('.js-plotly-plot') && typeof Plotly !== 'undefined') {
+                    try { Plotly.Plots.resize('grafico'); } catch (e) { /* ignore */ }
+                }
+            }, 150);
+        }
+        window.addEventListener('resize', debouncedPlotlyResize);
+        window.addEventListener('orientationchange', debouncedPlotlyResize);
+
         console.log('Aplicación cargada correctamente');
     } catch (error) {
         console.error('Error durante la inicialización:', error);
         alert('Error al cargar la aplicación. Por favor, recarga la página. Error: ' + error.message);
+    }
+});
+
+// ========================================
+// DARK MODE FUNCTIONALITY
+// ========================================
+
+/**
+ * Initialize dark mode based on user preference or system preference
+ */
+function initDarkMode() {
+    // Check for saved theme preference or default to system preference
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Determine initial theme
+    let theme = 'light';
+    if (savedTheme) {
+        theme = savedTheme;
+    } else if (prefersDark) {
+        theme = 'dark';
+    }
+    
+    // Apply theme
+    applyTheme(theme);
+    
+    // Listen for system theme changes (only if no saved preference)
+    if (!savedTheme) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            applyTheme(e.matches ? 'dark' : 'light');
+        });
+    }
+}
+
+/**
+ * Apply the specified theme
+ * @param {string} theme - 'light' or 'dark'
+ */
+function applyTheme(theme) {
+    const html = document.documentElement;
+    const toggleButton = document.getElementById('dark-mode-toggle');
+    const icon = document.getElementById('dark-mode-icon');
+    
+    if (theme === 'dark') {
+        html.setAttribute('data-theme', 'dark');
+        if (icon) icon.textContent = '☀️';
+        if (toggleButton) toggleButton.setAttribute('title', 'Cambiar a modo claro');
+    } else {
+        html.setAttribute('data-theme', 'light');
+        if (icon) icon.textContent = '🌙';
+        if (toggleButton) toggleButton.setAttribute('title', 'Cambiar a modo oscuro');
+    }
+    
+    // Save preference
+    localStorage.setItem('theme', theme);
+    
+    // Update Plotly charts if they exist
+    updatePlotlyCharts(theme);
+}
+
+/**
+ * Toggle between light and dark mode
+ */
+function toggleDarkMode() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+}
+
+/**
+ * Update Plotly charts to match the current theme
+ * @param {string} theme - 'light' or 'dark'
+ */
+function updatePlotlyCharts(theme) {
+    const plotlyDivs = document.querySelectorAll('.js-plotly-plot');
+    plotlyDivs.forEach(div => {
+        if (div.data && Plotly) {
+            const layout = div.layout || {};
+            const bgColor = theme === 'dark' ? '#1a1a1a' : '#ffffff';
+            const textColor = theme === 'dark' ? '#e0e0e0' : '#333';
+            const gridColor = theme === 'dark' ? '#444' : '#ddd';
+            
+            Plotly.relayout(div, {
+                'plot_bgcolor': bgColor,
+                'paper_bgcolor': bgColor,
+                'font.color': textColor,
+                'xaxis.gridcolor': gridColor,
+                'yaxis.gridcolor': gridColor,
+                'xaxis.linecolor': gridColor,
+                'yaxis.linecolor': gridColor,
+                'xaxis.zerolinecolor': gridColor,
+                'yaxis.zerolinecolor': gridColor
+            });
+        }
+    });
+}
+
+// Initialize dark mode when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDarkMode);
+} else {
+    initDarkMode();
+}
+
+// Add event listener to toggle button
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleButton = document.getElementById('dark-mode-toggle');
+    if (toggleButton) {
+        toggleButton.addEventListener('click', toggleDarkMode);
     }
 });
 

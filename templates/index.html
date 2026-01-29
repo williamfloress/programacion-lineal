@@ -13,6 +13,11 @@
 </head>
 <body>
 
+    <!-- Dark Mode Toggle Button -->
+    <button class="dark-mode-toggle" id="dark-mode-toggle" aria-label="Toggle dark mode" title="Cambiar modo oscuro/claro">
+        <span id="dark-mode-icon">🌙</span>
+    </button>
+
     <h1>Calculadora Programación Lineal</h1>
 
     <!-- Tabs para cambiar entre métodos -->
@@ -31,18 +36,18 @@
             </select>
             <div id="z-coefs-container-grafico" style="margin-top: 10px;">
                 <span>Z = </span>
-                <input type="number" class="z-coef-grafico" id="z_x" value="3" style="width: 50px;" data-var="0">
+                <input type="number" class="z-coef-grafico" id="z_x" value="3" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off">
                 <span> X </span>
                 <select class="z-op-grafico" id="z_op_y" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
                     <option value="+">+</option>
                     <option value="-">−</option>
                 </select>
-                <input type="number" class="z-coef-grafico" id="z_y" value="2" style="width: 50px;" data-var="1">
+                <input type="number" class="z-coef-grafico" id="z_y" value="2" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off">
                 <span> Y</span>
             </div>
             <br>
             <div style="margin-top: 10px;">
-                <span style="font-size: 0.9em; color: #666;">Nota: El método gráfico solo visualiza 2 variables (X y Y)</span>
+                <span style="font-size: 0.9em; color: var(--text-quaternary);">Nota: El método gráfico solo visualiza 2 variables (X y Y)</span>
             </div>
         </div>
 
@@ -64,7 +69,7 @@
             <div id="modo-coeficientes">
                 <div id="lista-restricciones">
                 <div class="fila-restriccion">
-                    <input type="number" class="res-x" value="2" style="width: 50px;"> X 
+                    <input type="number" class="res-x" value="2" style="width: 50px;" inputmode="decimal" autocomplete="off"> X 
                     <select class="res-op-var" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
                         <option value="+">+</option>
                         <option value="-">−</option>
@@ -78,7 +83,7 @@
                     <input type="number" class="res-val" value="100" style="width: 60px;">
                 </div>
                 <div class="fila-restriccion">
-                    <input type="number" class="res-x" value="1" style="width: 50px;"> X 
+                    <input type="number" class="res-x" value="1" style="width: 50px;" inputmode="decimal" autocomplete="off"> X 
                     <select class="res-op-var" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
                         <option value="+">+</option>
                         <option value="-">−</option>
@@ -106,11 +111,11 @@
                     <textarea 
                         id="restricciones-natural" 
                         rows="6" 
-                        style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid #ccc; border-radius: 4px;"
+                        style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid var(--border-primary); border-radius: 4px;"
                         placeholder="Ejemplos:&#10;y >= x&#10;y <= 2x&#10;x <= 30&#10;y <= 20&#10;x + y >= 10"
                     ></textarea>
                 </div>
-                <div style="padding: 10px; background: #e8f4f8; border-radius: 4px; margin-bottom: 10px;">
+                <div class="info-box">
                     <strong>💡 Tips:</strong>
                     <ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9em;">
                         <li>Usa "x" y "y" para las variables</li>
@@ -137,13 +142,13 @@
             </select>
             <div id="z-coefs-container" style="margin-top: 10px;">
                 <span>Z = </span>
-                <input type="number" class="z-coef" value="3" style="width: 50px;" data-var="0">
+                <input type="number" class="z-coef" value="3" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off">
                 <span> X₁ </span>
                 <select class="z-op" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
                     <option value="+">+</option>
                     <option value="-">−</option>
                 </select>
-                <input type="number" class="z-coef" value="2" style="width: 50px;" data-var="1">
+                <input type="number" class="z-coef" value="2" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off">
                 <span> X₂</span>
             </div>
             <br>
@@ -184,11 +189,11 @@
                     <textarea 
                         id="restricciones-natural-simplex" 
                         rows="6" 
-                        style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid #ccc; border-radius: 4px;"
+                        style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid var(--border-primary); border-radius: 4px;"
                         placeholder="Ejemplos:&#10;x1 + x2 <= 10&#10;2x1 + 3x2 >= 20&#10;x1 - x2 = 5&#10;x1 <= 30&#10;x2 >= 5"
                     ></textarea>
                 </div>
-                <div style="padding: 10px; background: #e8f4f8; border-radius: 4px; margin-bottom: 10px;">
+                <div class="info-box">
                     <strong>💡 Tips:</strong>
                     <ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9em;">
                         <li>Usa "x1", "x2", "x3", etc. para las variables</li>
@@ -223,7 +228,7 @@
         <div id="grafico" style="width:100%; height:500px;"></div>
 
         <h3><span style="border-bottom: 3px solid #27ae60;">3. Tabla de Evaluación de Vértices</span></h3>
-        <div style="margin-bottom: 10px; padding: 10px; background: #e8f4f8; border-radius: 5px; font-size: 0.9em;">
+        <div class="info-box" style="font-size: 0.9em;">
             <strong>💡 Explicación:</strong> Esta tabla muestra cómo se calcula el valor de la función objetivo Z para cada vértice de la región factible. 
             El cálculo se realiza sustituyendo las coordenadas (X, Y) del vértice en la función objetivo.
         </div>
@@ -239,9 +244,9 @@
             <tbody id="cuerpo-tabla"></tbody>
         </table>
 
-        <div id="analisis-box" style="margin-top: 30px; padding: 20px; border-left: 6px solid #2c3e50; background: #eef2f3; border-radius: 5px;">
-            <h2 id="titulo-tipo-solucion" style="margin-top:0; color: #2c3e50;">Solución Final</h2>
-            <p id="texto-explicacion" style="font-size: 1.1em; line-height: 1.5; color: #444;"></p>
+        <div id="analisis-box" class="analysis-box">
+            <h2 id="titulo-tipo-solucion">Solución Final</h2>
+            <p id="texto-explicacion"></p>
             <div id="caja-resultado-final" class="resultado-final-box" style="margin-top: 15px; font-size: 1.2em;"></div>
         </div>
 
@@ -264,9 +269,9 @@
         <h3><span style="border-bottom: 3px solid #9b59b6;">Tablas del Simplex</span></h3>
         <div id="tablas-simplex-container"></div>
 
-        <div id="analisis-box-simplex" style="margin-top: 30px; padding: 20px; border-left: 6px solid #2c3e50; background: #eef2f3; border-radius: 5px;">
-            <h2 id="titulo-tipo-solucion-simplex" style="margin-top:0; color: #2c3e50;">Solución Final</h2>
-            <p id="texto-explicacion-simplex" style="font-size: 1.1em; line-height: 1.5; color: #444;"></p>
+        <div id="analisis-box-simplex" class="analysis-box">
+            <h2 id="titulo-tipo-solucion-simplex">Solución Final</h2>
+            <p id="texto-explicacion-simplex"></p>
             <div id="caja-resultado-final-simplex" class="resultado-final-box" style="margin-top: 15px; font-size: 1.2em;"></div>
         </div>
 
