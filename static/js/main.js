@@ -602,37 +602,53 @@ function cambiarMetodo(metodo) {
     // Actualizar tabs
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.classList.remove('active');
-        if (btn.textContent.includes(metodo === 'grafico' ? 'Gráfico' : 'Simplex')) {
+        const btnText = btn.textContent;
+        if ((metodo === 'grafico' && btnText.includes('Gráfico')) ||
+            (metodo === 'simplex' && btnText.includes('Simplex') && !btnText.includes('Fases')) ||
+            (metodo === 'dos-fases' && btnText.includes('2 Fases'))) {
             btn.classList.add('active');
         }
     });
     
-    // Mostrar/ocultar secciones
+    // Ocultar todos
+    document.getElementById('metodo-grafico').style.display = 'none';
+    document.getElementById('metodo-simplex').style.display = 'none';
+    document.getElementById('metodo-dos-fases').style.display = 'none';
+    document.getElementById('resultados').style.display = 'none';
+    document.getElementById('resultados-simplex').style.display = 'none';
+    document.getElementById('resultados-dos-fases').style.display = 'none';
+    
+    // Mostrar el seleccionado
     if (metodo === 'grafico') {
         document.getElementById('metodo-grafico').style.display = 'block';
-        document.getElementById('metodo-simplex').style.display = 'none';
-        document.getElementById('resultados').style.display = 'none';
-        document.getElementById('resultados-simplex').style.display = 'none';
-    } else {
-        document.getElementById('metodo-grafico').style.display = 'none';
+    } else if (metodo === 'simplex') {
         document.getElementById('metodo-simplex').style.display = 'block';
-        document.getElementById('resultados').style.display = 'none';
-        document.getElementById('resultados-simplex').style.display = 'none';
         
         // Inicializar simplex con una restricción si no hay ninguna
         const container = document.getElementById('lista-restricciones-simplex');
-        if (!container) {
-            console.error('Error: No se encontró el contenedor de restricciones Simplex');
-            return;
+        if (container) {
+            const numVars = obtenerNumVariables();
+            if (numVars > 0 && container.children.length === 0) {
+                try {
+                    agregarRestriccionSimplex();
+                } catch (error) {
+                    console.error('Error al inicializar restricción Simplex:', error);
+                }
+            }
         }
+    } else if (metodo === 'dos-fases') {
+        document.getElementById('metodo-dos-fases').style.display = 'block';
         
-        // Verificar si hay variables en la función objetivo antes de agregar restricción
-        const numVars = obtenerNumVariables();
-        if (numVars > 0 && container.children.length === 0) {
-            try {
-                agregarRestriccionSimplex();
-            } catch (error) {
-                console.error('Error al inicializar restricción Simplex:', error);
+        // Inicializar dos fases con una restricción si no hay ninguna
+        const container = document.getElementById('lista-restricciones-dos-fases');
+        if (container) {
+            const numVars = obtenerNumVariablesDosFases();
+            if (numVars > 0 && container.children.length === 0) {
+                try {
+                    agregarRestriccionDosFases();
+                } catch (error) {
+                    console.error('Error al inicializar restricción Dos Fases:', error);
+                }
             }
         }
     }
@@ -712,7 +728,7 @@ async function convertirRestriccionesNaturales() {
         
         // Mostrar mensaje de éxito
         const mensaje = document.createElement('div');
-        mensaje.style.cssText = 'margin-top: 10px; padding: 10px; background: #d4edda; color: #155724; border-radius: 4px;';
+        mensaje.className = 'message-success';
         mensaje.textContent = `✓ ${datos.restricciones.length} restricción(es) convertida(s) exitosamente.`;
         container.parentElement.insertBefore(mensaje, container.nextSibling);
         
@@ -1458,7 +1474,7 @@ function mostrarTablasSimplex(datos) {
     
     // Agregar explicación general sobre las tablas
     const explicacionGeneral = document.createElement('div');
-    explicacionGeneral.style.cssText = 'margin-bottom: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #9b59b6;';
+    explicacionGeneral.className = 'table-info-general';
     explicacionGeneral.innerHTML = `
         <strong>💡 Explicación de las Tablas del Simplex:</strong>
         <ul style="margin: 10px 0 0 20px; padding: 0;">
@@ -1486,28 +1502,20 @@ function mostrarTablasSimplex(datos) {
         
         const titulo = document.createElement('h4');
         titulo.textContent = `Iteración ${tablaInfo.iteracion}`;
-        titulo.style.color = '#9b59b6';
-        titulo.style.borderBottom = '2px solid #9b59b6';
-        titulo.style.paddingBottom = '10px';
-        titulo.style.marginBottom = '15px';
+        titulo.className = 'table-title';
         tablaDiv.appendChild(titulo);
         
         if (tablaInfo.explicacion) {
             const explicacion = document.createElement('p');
             explicacion.textContent = tablaInfo.explicacion;
-            explicacion.style.fontStyle = 'italic';
-            explicacion.style.color = '#666';
-            explicacion.style.marginBottom = '15px';
-            explicacion.style.padding = '10px';
-            explicacion.style.background = '#f8f9fa';
-            explicacion.style.borderRadius = '5px';
+            explicacion.className = 'table-explanation';
             tablaDiv.appendChild(explicacion);
         }
         
         // Mostrar información sobre variable entrante/saliente si está disponible
         if (tablaInfo.col_entrante !== undefined && tablaInfo.fila_saliente !== undefined) {
             const infoDiv = document.createElement('div');
-            infoDiv.style.cssText = 'margin-bottom: 15px; padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 5px;';
+            infoDiv.className = 'table-info-pivot';
             const nombresCols = tablaInfo.nombres_columnas || [];
             const varEntrante = nombresCols[tablaInfo.col_entrante] || `Columna ${tablaInfo.col_entrante + 1}`;
             const varSaliente = tablaInfo.variables_basicas && tablaInfo.variables_basicas[tablaInfo.fila_saliente] 
@@ -1526,7 +1534,7 @@ function mostrarTablasSimplex(datos) {
         // Mostrar ratios si están disponibles
         if (tablaInfo.ratios && tablaInfo.ratios.length > 0) {
             const ratiosDiv = document.createElement('div');
-            ratiosDiv.style.cssText = 'margin-bottom: 15px; padding: 12px; background: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 5px;';
+            ratiosDiv.className = 'table-info-ratios';
             let ratiosHtml = '<strong>📊 Ratios (Solución ÷ Variable Entrante):</strong><br>';
             tablaInfo.ratios.forEach((ratio, idx) => {
                 const varBasica = tablaInfo.variables_basicas && tablaInfo.variables_basicas[idx] 
@@ -1560,8 +1568,7 @@ function mostrarTablasSimplex(datos) {
         // Crear encabezados
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
-        headerRow.style.background = '#9b59b6';
-        headerRow.style.color = 'white';
+        headerRow.className = 'table-header-row';
         
         // Columna de variables básicas
         const thVB = document.createElement('th');
@@ -1588,8 +1595,7 @@ function mostrarTablasSimplex(datos) {
             // Resaltar columna entrante (solo si no es la tabla inicial)
             if (tablaInfo.col_entrante !== undefined && tablaInfo.col_entrante !== null && 
                 tablaInfo.col_entrante === i) {
-                th.style.background = '#ffc107';
-                th.style.color = '#000';
+                th.className = 'table-col-entrante';
                 th.title = 'Variable Entrante';
             }
             
@@ -1619,14 +1625,13 @@ function mostrarTablasSimplex(datos) {
             const esFilaZ = filaIdx === 0;
             
             if (esFilaZ) {
-                tr.style.background = '#e8d5f2';
-                tr.style.fontWeight = 'bold';
+                tr.className = 'table-row-objetivo';
             } else {
                 // Resaltar fila saliente
                 // Las restricciones están en índices 1 a num_rest, así que fila_saliente corresponde a filaIdx - 1
                 if (tablaInfo.fila_saliente !== undefined && tablaInfo.fila_saliente !== null && 
                     tablaInfo.fila_saliente === filaIdx - 1) {
-                    tr.style.background = '#fff3cd';
+                    tr.className = 'table-row-saliente';
                 }
             }
             
@@ -1634,7 +1639,7 @@ function mostrarTablasSimplex(datos) {
             const tdVB = document.createElement('td');
             if (esFilaZ) {
                 tdVB.textContent = 'Z';
-                tdVB.style.fontWeight = 'bold';
+                tdVB.className = 'table-cell-vb table-cell-vb-objetivo';
             } else {
                 // Las variables básicas están indexadas desde 0, pero las restricciones empiezan en filaIdx 1
                 const idxVarBasica = filaIdx - 1;  // Ajustar índice porque Z está en 0
@@ -1643,13 +1648,8 @@ function mostrarTablasSimplex(datos) {
                     ? tablaInfo.variables_basicas[idxVarBasica] 
                     : '-';
                 tdVB.textContent = varBasica;
-                tdVB.style.fontWeight = 'bold';
-                tdVB.style.color = '#9b59b6';
+                tdVB.className = 'table-cell-vb';
             }
-            tdVB.style.padding = '8px';
-            tdVB.style.border = '1px solid #ddd';
-            tdVB.style.textAlign = 'center';
-            tdVB.style.background = esFilaZ ? '#e8d5f2' : '#f8f9fa';
             tr.appendChild(tdVB);
             
             // Valores de la fila
@@ -1666,21 +1666,22 @@ function mostrarTablasSimplex(datos) {
                     td.style.fontWeight = 'bold';
                 }
                 
+                // Resaltar columna de solución
+                if (colIdx === numVars) {
+                    td.className = 'table-cell-solucion';
+                }
+                
                 // Resaltar elemento pivote
                 // Las restricciones están en índices 1 a num_rest, así que fila_saliente corresponde a filaIdx - 1
                 if (tablaInfo.fila_saliente !== undefined && tablaInfo.fila_saliente !== null &&
                     tablaInfo.fila_saliente === filaIdx - 1 && tablaInfo.col_entrante === colIdx && 
                     tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null) {
-                    td.style.background = '#ffc107';
-                    td.style.color = '#000';
-                    td.style.fontWeight = 'bold';
-                    td.style.border = '3px solid #ff9800';
+                    td.className = 'table-cell-pivote';
                     td.title = `Elemento Pivote: ${tablaInfo.elemento_pivote.toFixed(4)}`;
                 }
-                
                 // Resaltar columna entrante (solo en filas de restricciones, no en Z)
-                if (tablaInfo.col_entrante === colIdx && !esFilaZ) {
-                    td.style.background = '#fff3cd';
+                else if (tablaInfo.col_entrante === colIdx && !esFilaZ) {
+                    td.className = 'table-cell-entrante';
                 }
                 
                 tr.appendChild(td);
@@ -1810,7 +1811,7 @@ async function convertirRestriccionesNaturalesSimplex() {
         
         // Mostrar mensaje de éxito
         const mensaje = document.createElement('div');
-        mensaje.style.cssText = 'margin-top: 10px; padding: 10px; background: #d4edda; color: #155724; border-radius: 4px;';
+        mensaje.className = 'message-success';
         mensaje.textContent = `✓ ${datos.restricciones.length} restricción(es) convertida(s) exitosamente.`;
         container.parentElement.insertBefore(mensaje, container.nextSibling);
         
@@ -1877,6 +1878,954 @@ function toggleCalculationsSimplex() {
         logContainer.style.display = 'none';
         summaryDiv.style.display = 'block';
         toggleBtn.innerHTML = '<span id="toggle-icon-simplex">▼</span> Ver Detalles';
+    }
+}
+
+// ========== FUNCIONES PARA MÉTODO DOS FASES ==========
+
+// Obtener número de variables actuales (Dos Fases)
+function obtenerNumVariablesDosFases() {
+    return document.querySelectorAll('.z-coef-dos-fases').length;
+}
+
+// Agregar variable al método Dos Fases
+function agregarVariableDosFases() {
+    const numVars = obtenerNumVariablesDosFases();
+    const nuevaVar = numVars + 1;
+    const subindice = numeroASubindice(nuevaVar);
+    
+    const container = document.getElementById('z-coefs-container-dos-fases');
+    
+    if (numVars > 0) {
+        const operadorSelect = document.createElement('select');
+        operadorSelect.className = 'z-op-dos-fases';
+        operadorSelect.setAttribute('data-var', numVars);
+        operadorSelect.style.width = '50px';
+        operadorSelect.style.margin = '0 5px';
+        operadorSelect.style.padding = '4px';
+        operadorSelect.style.textAlign = 'center';
+        operadorSelect.style.fontSize = '1.2em';
+        operadorSelect.style.fontWeight = 'bold';
+        operadorSelect.innerHTML = `
+            <option value="+">+</option>
+            <option value="-">−</option>
+        `;
+        
+        const ultimoInput = container.querySelector('.z-coef-dos-fases:last-of-type');
+        if (ultimoInput) {
+            let nodoActual = ultimoInput.nextSibling;
+            while (nodoActual) {
+                if (nodoActual.nodeType === 3 && nodoActual.textContent.trim().match(/^X[₀₁₂₃₄₅₆₇₈₉]+$/)) {
+                    container.insertBefore(operadorSelect, nodoActual.nextSibling);
+                    break;
+                }
+                nodoActual = nodoActual.nextSibling;
+            }
+            if (!nodoActual || !nodoActual.nextSibling) {
+                container.appendChild(operadorSelect);
+            }
+        } else {
+            container.appendChild(operadorSelect);
+        }
+    }
+    
+    const nuevoInput = document.createElement('input');
+    nuevoInput.type = 'number';
+    nuevoInput.className = 'z-coef-dos-fases';
+    nuevoInput.value = '0';
+    nuevoInput.style.width = '50px';
+    nuevoInput.setAttribute('data-var', numVars);
+    nuevoInput.setAttribute('inputmode', 'decimal');
+    nuevoInput.setAttribute('autocomplete', 'off');
+    
+    const textoVar = document.createTextNode(` X${subindice}`);
+    
+    container.appendChild(nuevoInput);
+    container.appendChild(textoVar);
+    
+    // Agregar a todas las restricciones existentes
+    const filasRestricciones = document.querySelectorAll('.fila-restriccion-dos-fases');
+    
+    filasRestricciones.forEach(fila => {
+        const ultimoCoef = fila.querySelector('.res-coef-dos-fases:last-of-type');
+        const selectOp = fila.querySelector('.res-op-dos-fases');
+        
+        if (ultimoCoef) {
+            let nodoTexto = ultimoCoef.nextSibling;
+            while (nodoTexto) {
+                if (nodoTexto.nodeType === 3 && nodoTexto.textContent.trim().match(/^X[₀₁₂₃₄₅₆₇₈₉]+$/)) {
+                    const operadorSelect = document.createElement('select');
+                    operadorSelect.className = 'res-op-var-dos-fases';
+                    operadorSelect.setAttribute('data-var', numVars);
+                    operadorSelect.style.width = '50px';
+                    operadorSelect.style.margin = '0 5px';
+                    operadorSelect.style.padding = '4px';
+                    operadorSelect.style.textAlign = 'center';
+                    operadorSelect.style.fontSize = '1em';
+                    operadorSelect.innerHTML = `
+                        <option value="+">+</option>
+                        <option value="-">-</option>
+                    `;
+                    
+                    fila.insertBefore(operadorSelect, nodoTexto.nextSibling);
+                    
+                    const nuevoCoef = document.createElement('input');
+                    nuevoCoef.type = 'number';
+                    nuevoCoef.className = 'res-coef-dos-fases';
+                    nuevoCoef.value = '0';
+                    nuevoCoef.style.width = '50px';
+                    nuevoCoef.setAttribute('data-var', numVars);
+                    nuevoCoef.setAttribute('inputmode', 'decimal');
+                    nuevoCoef.setAttribute('autocomplete', 'off');
+                    const textoVarRest = document.createTextNode(` X${subindice}`);
+                    fila.insertBefore(nuevoCoef, operadorSelect.nextSibling);
+                    fila.insertBefore(textoVarRest, operadorSelect.nextSibling);
+                    break;
+                }
+                nodoTexto = nodoTexto.nextSibling;
+            }
+        } else if (selectOp) {
+            const nuevoCoef = document.createElement('input');
+            nuevoCoef.type = 'number';
+            nuevoCoef.className = 'res-coef-dos-fases';
+            nuevoCoef.value = '0';
+            nuevoCoef.style.width = '50px';
+            nuevoCoef.setAttribute('data-var', numVars);
+            nuevoCoef.setAttribute('inputmode', 'decimal');
+            nuevoCoef.setAttribute('autocomplete', 'off');
+            const textoVarRest = document.createTextNode(` X${subindice}`);
+            fila.insertBefore(nuevoCoef, selectOp);
+            fila.insertBefore(textoVarRest, selectOp);
+        }
+    });
+}
+
+// Eliminar variable del método Dos Fases
+function eliminarVariableDosFases() {
+    const numVars = obtenerNumVariablesDosFases();
+    if (numVars <= 0) {
+        alert('No hay variables para eliminar');
+        return;
+    }
+    
+    const container = document.getElementById('z-coefs-container-dos-fases');
+    const inputs = Array.from(container.querySelectorAll('.z-coef-dos-fases'));
+    
+    if (inputs.length === 0) {
+        return;
+    }
+    
+    const ultimoInput = inputs[inputs.length - 1];
+    const elementosAEliminar = [];
+    
+    let nodoActual = ultimoInput.nextSibling;
+    while (nodoActual) {
+        if (nodoActual.nodeType === 3 && nodoActual.textContent.trim().match(/^X[₀₁₂₃₄₅₆₇₈₉]+$/)) {
+            elementosAEliminar.push(nodoActual);
+            break;
+        }
+        nodoActual = nodoActual.nextSibling;
+    }
+    
+    if (inputs.length > 1) {
+        const inputAnterior = inputs[inputs.length - 2];
+        nodoActual = inputAnterior.nextSibling;
+        
+        while (nodoActual && nodoActual !== ultimoInput) {
+            if (nodoActual.nodeType === 1 && nodoActual.classList.contains('z-op-dos-fases')) {
+                elementosAEliminar.push(nodoActual);
+                break;
+            }
+            nodoActual = nodoActual.nextSibling;
+        }
+    }
+    
+    elementosAEliminar.forEach(elem => {
+        if (elem.parentNode) {
+            elem.parentNode.removeChild(elem);
+        }
+    });
+    
+    container.removeChild(ultimoInput);
+    
+    // Eliminar de todas las restricciones
+    const filasRestricciones = document.querySelectorAll('.fila-restriccion-dos-fases');
+    
+    filasRestricciones.forEach(fila => {
+        const coefs = Array.from(fila.querySelectorAll('.res-coef-dos-fases'));
+        
+        if (coefs.length === 0) {
+            return;
+        }
+        
+        const ultimoCoef = coefs[coefs.length - 1];
+        const elementosAEliminar = [];
+        
+        let nodoActual = ultimoCoef.nextSibling;
+        while (nodoActual) {
+            if (nodoActual.nodeType === 1 && nodoActual.classList.contains('res-op-dos-fases')) {
+                break;
+            }
+            if (nodoActual.nodeType === 3 && nodoActual.textContent.trim().match(/^X[₀₁₂₃₄₅₆₇₈₉]+$/)) {
+                elementosAEliminar.push(nodoActual);
+                break;
+            }
+            nodoActual = nodoActual.nextSibling;
+        }
+        
+        if (coefs.length > 1) {
+            const coefAnterior = coefs[coefs.length - 2];
+            nodoActual = coefAnterior.nextSibling;
+            
+            while (nodoActual && nodoActual !== ultimoCoef) {
+                if (nodoActual.nodeType === 1 && nodoActual.classList.contains('res-op-var-dos-fases')) {
+                    elementosAEliminar.push(nodoActual);
+                    break;
+                }
+                nodoActual = nodoActual.nextSibling;
+            }
+        }
+        
+        elementosAEliminar.forEach(elem => {
+            if (elem.parentNode) {
+                elem.parentNode.removeChild(elem);
+            }
+        });
+        
+        fila.removeChild(ultimoCoef);
+    });
+    
+    reindexarVariablesDosFases();
+}
+
+// Reindexar variables después de eliminar
+function reindexarVariablesDosFases() {
+    const container = document.getElementById('z-coefs-container-dos-fases');
+    const inputs = Array.from(container.querySelectorAll('.z-coef-dos-fases'));
+    
+    inputs.forEach((input, index) => {
+        input.setAttribute('data-var', index);
+        
+        const nodoTexto = input.nextSibling;
+        if (nodoTexto && nodoTexto.nodeType === 3) {
+            const texto = nodoTexto.textContent;
+            const nuevoSubindice = numeroASubindice(index + 1);
+            const textoLimpio = texto.replace(/X[₀₁₂₃₄₅₆₇₈₉]+/, `X${nuevoSubindice}`);
+            nodoTexto.textContent = textoLimpio;
+        }
+    });
+    
+    const filasRestricciones = document.querySelectorAll('.fila-restriccion-dos-fases');
+    filasRestricciones.forEach(fila => {
+        const coeficientes = Array.from(fila.querySelectorAll('.res-coef-dos-fases'));
+        coeficientes.forEach((coef, index) => {
+            coef.setAttribute('data-var', index);
+            
+            const nodoTexto = coef.nextSibling;
+            if (nodoTexto && nodoTexto.nodeType === 3) {
+                const texto = nodoTexto.textContent;
+                const nuevoSubindice = numeroASubindice(index + 1);
+                const textoLimpio = texto.replace(/X[₀₁₂₃₄₅₆₇₈₉]+/, `X${nuevoSubindice}`);
+                nodoTexto.textContent = textoLimpio;
+            }
+        });
+    });
+}
+
+// Agregar restricción al método Dos Fases
+function agregarRestriccionDosFases() {
+    const numVars = obtenerNumVariablesDosFases();
+    
+    if (numVars === 0) {
+        alert('Primero debe agregar al menos una variable a la función objetivo');
+        return;
+    }
+    
+    const container = document.getElementById('lista-restricciones-dos-fases');
+    
+    const nuevaFila = document.createElement('div');
+    nuevaFila.className = 'fila-restriccion-dos-fases';
+    nuevaFila.style.marginBottom = '10px';
+    
+    for (let i = 0; i < numVars; i++) {
+        const subindice = numeroASubindice(i + 1);
+        const esUltima = (i === numVars - 1);
+        
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'res-coef-dos-fases';
+        input.value = '0';
+        input.style.width = '50px';
+        input.setAttribute('data-var', i);
+        input.setAttribute('inputmode', 'decimal');
+        input.setAttribute('autocomplete', 'off');
+        nuevaFila.appendChild(input);
+        
+        const textoVar = document.createTextNode(` X${subindice}${esUltima ? ' ' : ' '}`);
+        nuevaFila.appendChild(textoVar);
+        
+        if (!esUltima) {
+            const operadorSelect = document.createElement('select');
+            operadorSelect.className = 'res-op-var-dos-fases';
+            operadorSelect.setAttribute('data-var', i + 1);
+            operadorSelect.style.width = '50px';
+            operadorSelect.style.margin = '0 5px';
+            operadorSelect.style.padding = '4px';
+            operadorSelect.style.textAlign = 'center';
+            operadorSelect.style.fontSize = '1.2em';
+            operadorSelect.style.fontWeight = 'bold';
+            operadorSelect.innerHTML = `
+                <option value="+">+</option>
+                <option value="-">−</option>
+            `;
+            nuevaFila.appendChild(operadorSelect);
+        }
+    }
+    
+    const select = document.createElement('select');
+    select.className = 'res-op-dos-fases';
+    select.innerHTML = `
+        <option value="<=">&le;</option>
+        <option value=">=">&ge;</option>
+        <option value="=">=</option>
+    `;
+    nuevaFila.appendChild(select);
+    
+    const inputVal = document.createElement('input');
+    inputVal.type = 'number';
+    inputVal.className = 'res-val-dos-fases';
+    inputVal.value = '0';
+    inputVal.style.width = '60px';
+    inputVal.setAttribute('inputmode', 'decimal');
+    inputVal.setAttribute('autocomplete', 'off');
+    nuevaFila.appendChild(inputVal);
+    
+    container.appendChild(nuevaFila);
+}
+
+// Eliminar restricción del método Dos Fases
+function eliminarRestriccionDosFases() {
+    const container = document.getElementById('lista-restricciones-dos-fases');
+    const restricciones = container.querySelectorAll('.fila-restriccion-dos-fases');
+    
+    if (restricciones.length === 0) {
+        alert('No hay restricciones para eliminar');
+        return;
+    }
+    
+    const ultimaRestriccion = restricciones[restricciones.length - 1];
+    container.removeChild(ultimaRestriccion);
+}
+
+// Cambiar modo de restricciones (Dos Fases)
+function cambiarModoRestriccionesDosFases(modo) {
+    const modoCoef = document.getElementById('modo-coeficientes-dos-fases');
+    const modoNatural = document.getElementById('modo-natural-dos-fases');
+    
+    const botones = document.querySelectorAll('.restriction-mode-btn-dos-fases');
+    botones.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-mode') === modo) {
+            btn.classList.add('active');
+        }
+    });
+    
+    if (modo === 'coeficientes') {
+        modoCoef.style.display = 'block';
+        modoNatural.style.display = 'none';
+    } else {
+        modoCoef.style.display = 'none';
+        modoNatural.style.display = 'block';
+    }
+}
+
+// Convertir restricciones naturales a coeficientes (Dos Fases)
+async function convertirRestriccionesNaturalesDosFases() {
+    const textarea = document.getElementById('restricciones-natural-dos-fases');
+    const texto = textarea.value.trim();
+    
+    if (!texto) {
+        alert('Por favor, ingresa al menos una restricción.');
+        return;
+    }
+    
+    const numVars = obtenerNumVariablesDosFases();
+    if (numVars === 0) {
+        alert('Error: Primero debes definir al menos una variable en la función objetivo.');
+        return;
+    }
+    
+    const restricciones = texto.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+    
+    if (restricciones.length === 0) {
+        alert('No se encontraron restricciones válidas.');
+        return;
+    }
+    
+    try {
+        const respuesta = await fetch('/convertir-restricciones-simplex', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                restricciones: restricciones,
+                num_variables: numVars
+            })
+        });
+        
+        const datos = await respuesta.json();
+        
+        if (datos.status === 'error') {
+            alert(`Error al convertir restricciones: ${datos.message}`);
+            return;
+        }
+        
+        const container = document.getElementById('lista-restricciones-dos-fases');
+        container.innerHTML = '';
+        
+        datos.restricciones.forEach(rest => {
+            agregarRestriccionDosFasesDesdeDatos(rest, numVars);
+        });
+        
+        cambiarModoRestriccionesDosFases('coeficientes');
+        
+        const mensaje = document.createElement('div');
+        mensaje.style.cssText = 'margin-top: 10px; padding: 10px; background: #d4edda; color: #155724; border-radius: 4px;';
+        mensaje.textContent = `✓ ${datos.restricciones.length} restricción(es) convertida(s) exitosamente.`;
+        container.parentElement.insertBefore(mensaje, container.nextSibling);
+        
+        setTimeout(() => {
+            mensaje.remove();
+        }, 3000);
+        
+    } catch (error) {
+        alert(`Error al convertir restricciones: ${error.message}`);
+    }
+}
+
+// Agregar restricción desde datos convertidos (Dos Fases)
+function agregarRestriccionDosFasesDesdeDatos(datos, numVars) {
+    const container = document.getElementById('lista-restricciones-dos-fases');
+    
+    const nuevaFila = document.createElement('div');
+    nuevaFila.className = 'fila-restriccion-dos-fases';
+    
+    let html = '';
+    for (let i = 0; i < numVars; i++) {
+        const coef = datos.coefs[i] || 0;
+        const subindice = numeroASubindice(i + 1);
+        const absCoef = Math.abs(coef);
+        
+        if (i === 0) {
+            html += `<input type="number" class="res-coef-dos-fases" value="${absCoef}" style="width: 50px;" data-var="${i}" inputmode="decimal" autocomplete="off"> X${subindice} `;
+        } else {
+            const signo = coef >= 0 ? '+' : '-';
+            html += `<select class="res-op-var-dos-fases" data-var="${i-1}" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1em;">
+                <option value="+" ${signo === '+' ? 'selected' : ''}>+</option>
+                <option value="-" ${signo === '-' ? 'selected' : ''}>-</option>
+            </select>`;
+            html += `<input type="number" class="res-coef-dos-fases" value="${absCoef}" style="width: 50px;" data-var="${i}" inputmode="decimal" autocomplete="off"> X${subindice} `;
+        }
+    }
+    
+    html += `
+        <select class="res-op-dos-fases">
+            <option value="<=" ${datos.op === '<=' ? 'selected' : ''}>&le;</option>
+            <option value=">=" ${datos.op === '>=' ? 'selected' : ''}>&ge;</option>
+            <option value="=" ${datos.op === '=' ? 'selected' : ''}>=</option>
+        </select>
+        <input type="number" class="res-val-dos-fases" value="${datos.val}" style="width: 60px;" inputmode="decimal" autocomplete="off">
+    `;
+    
+    nuevaFila.innerHTML = html;
+    container.appendChild(nuevaFila);
+}
+
+// Resolver problema con Dos Fases
+async function resolverDosFases() {
+    const objetivo = document.getElementById('objetivo-dos-fases').value;
+    const zCoefsInputs = Array.from(document.querySelectorAll('.z-coef-dos-fases'));
+    const zOpsInputs = Array.from(document.querySelectorAll('.z-op-dos-fases'));
+    
+    let zCoefs = [];
+    zCoefsInputs.forEach((input, index) => {
+        let coef = parseFloat(input.value || 0);
+        if (index > 0) {
+            const opIndex = index - 1;
+            if (opIndex < zOpsInputs.length) {
+                const op = zOpsInputs[opIndex].value;
+                if (op === '-') {
+                    coef = -coef;
+                }
+            }
+        }
+        zCoefs.push(coef);
+    });
+    
+    const numVarsObjetivo = zCoefs.length;
+    
+    if (numVarsObjetivo === 0) {
+        alert('Error: Debe agregar al menos una variable a la función objetivo.');
+        return;
+    }
+    
+    const modoActivoBtn = document.querySelector('.restriction-mode-btn-dos-fases.active');
+    const modoActivo = modoActivoBtn ? modoActivoBtn.getAttribute('data-mode') : 'coeficientes';
+    let restricciones = [];
+    
+    if (modoActivo === 'natural') {
+        const textarea = document.getElementById('restricciones-natural-dos-fases');
+        const texto = textarea.value.trim();
+        
+        if (!texto) {
+            alert('Error: Debe ingresar al menos una restricción en forma natural.');
+            return;
+        }
+        
+        const restriccionesStr = texto.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+        
+        if (restriccionesStr.length === 0) {
+            alert('Error: No se encontraron restricciones válidas.');
+            return;
+        }
+        
+        try {
+            const respuesta = await fetch('/convertir-restricciones-simplex', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    restricciones: restriccionesStr,
+                    num_variables: numVarsObjetivo
+                })
+            });
+            
+            const datos = await respuesta.json();
+            
+            if (datos.status === 'error') {
+                alert(`Error al convertir restricciones: ${datos.message}`);
+                return;
+            }
+            
+            restricciones = datos.restricciones.map(rest => ({
+                coefs: rest.coefs,
+                op: rest.op,
+                val: rest.val
+            }));
+            
+        } catch (error) {
+            alert(`Error al convertir restricciones: ${error.message}`);
+            return;
+        }
+    } else {
+        const filas = document.querySelectorAll('.fila-restriccion-dos-fases');
+        
+        if (filas.length === 0) {
+            alert('Error: Debe agregar al menos una restricción.');
+            return;
+        }
+        
+        filas.forEach((fila, index) => {
+            const coefsInputs = Array.from(fila.querySelectorAll('.res-coef-dos-fases'));
+            const opsInputs = Array.from(fila.querySelectorAll('.res-op-var-dos-fases'));
+            
+            let coefs = [];
+            coefsInputs.forEach((input, idx) => {
+                let coef = parseFloat(input.value || 0);
+                if (idx > 0) {
+                    const opIndex = idx - 1;
+                    if (opIndex < opsInputs.length) {
+                        const op = opsInputs[opIndex].value;
+                        if (op === '-') {
+                            coef = -coef;
+                        }
+                    }
+                }
+                coefs.push(coef);
+            });
+            
+            if (coefs.length !== numVarsObjetivo) {
+                alert(`Error: La restricción ${index + 1} tiene ${coefs.length} variables pero el objetivo tiene ${numVarsObjetivo}.`);
+                return;
+            }
+            
+            const opSelect = fila.querySelector('.res-op-dos-fases');
+            const valInput = fila.querySelector('.res-val-dos-fases');
+            
+            if (!opSelect || !valInput) {
+                alert(`Error: La restricción ${index + 1} está incompleta.`);
+                return;
+            }
+            
+            restricciones.push({
+                coefs: coefs,
+                op: opSelect.value,
+                val: parseFloat(valInput.value || 0)
+            });
+        });
+    }
+    
+    if (restricciones.length === 0) {
+        alert('Error: Debe haber al menos una restricción.');
+        return;
+    }
+    
+    // Enviar a backend
+    const respuesta = await fetch('/calcular-dos-fases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ objetivo, z_coefs: zCoefs, restricciones })
+    });
+    
+    const datos = await respuesta.json();
+    document.getElementById('resultados-dos-fases').style.display = 'block';
+    
+    // Mostrar resultados
+    crearResumenDosFases(datos);
+    
+    // Log detallado
+    const logDiv = document.getElementById('log-container-dos-fases');
+    logDiv.innerHTML = '';
+    datos.pasos.forEach(paso => {
+        const pasoDiv = document.createElement('div');
+        pasoDiv.className = 'step-card';
+        pasoDiv.innerHTML = `<span class="step-detail">${paso}</span>`;
+        logDiv.appendChild(pasoDiv);
+    });
+    
+    // Tablas
+    mostrarTablasDosFases(datos);
+    
+    // Solución final
+    mostrarSolucionDosFases(datos);
+}
+
+// Crear resumen para Dos Fases
+function crearResumenDosFases(datos) {
+    const summaryDiv = document.getElementById('calculations-summary-dos-fases');
+    let html = '<div class="summary-box">';
+    
+    if (datos.status === 'infeasible') {
+        html += `
+            <div class="summary-item">
+                <strong style="color: #e74c3c;">❌ Problema No Factible</strong>
+                <p>${datos.explicacion}</p>
+            </div>
+        `;
+    } else if (datos.status === 'unbounded') {
+        html += `
+            <div class="summary-item">
+                <strong style="color: #e67e22;">⚠ Problema No Acotado</strong>
+                <p>${datos.explicacion}</p>
+            </div>
+        `;
+    } else {
+        const iteraciones = datos.iteraciones || 0;
+        html += `
+            <div class="summary-item">
+                <strong>📊 Iteraciones:</strong>
+                <span>${iteraciones} iteraciones realizadas</span>
+            </div>
+            <div class="summary-item">
+                <strong>🎯 Solución:</strong>
+                <span style="color: #27ae60; font-weight: bold;">
+                    Z = ${datos.z_optimo.toFixed(4)}
+                </span>
+            </div>
+            <div class="summary-item">
+                <strong>✅ Variables:</strong>
+                <span>${datos.solucion.map((val, idx) => `x${idx+1} = ${val.toFixed(4)}`).join(', ')}</span>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    summaryDiv.innerHTML = html;
+}
+
+// Mostrar tablas del método Dos Fases (con Fase 1 y Fase 2)
+function mostrarTablasDosFases(datos) {
+    const container = document.getElementById('tablas-dos-fases-container');
+    container.innerHTML = '';
+    
+    if (!datos.tablas || datos.tablas.length === 0) {
+        container.innerHTML = '<p style="color: red;">No hay tablas para mostrar.</p>';
+        return;
+    }
+    
+    // Separar tablas por fase
+    const tablasFase1 = datos.tablas.filter(t => t.fase === 1);
+    const tablasFase2 = datos.tablas.filter(t => t.fase === 2);
+    
+    // Mostrar Fase 1
+    if (tablasFase1.length > 0) {
+        const seccionFase1 = document.createElement('div');
+        seccionFase1.style.cssText = 'margin-bottom: 40px;';
+        
+        const tituloFase1 = document.createElement('h3');
+        tituloFase1.innerHTML = '<span style="border-bottom: 3px solid #e67e22;">FASE 1: Minimización de W (variables artificiales)</span>';
+        seccionFase1.appendChild(tituloFase1);
+        
+        tablasFase1.forEach((tablaInfo, idx) => {
+            const tablaDiv = crearTablaHTML(tablaInfo);
+            seccionFase1.appendChild(tablaDiv);
+        });
+        
+        container.appendChild(seccionFase1);
+    }
+    
+    // Mostrar Fase 2
+    if (tablasFase2.length > 0) {
+        const seccionFase2 = document.createElement('div');
+        seccionFase2.style.cssText = 'margin-bottom: 40px;';
+        
+        const tituloFase2 = document.createElement('h3');
+        tituloFase2.innerHTML = '<span style="border-bottom: 3px solid #9b59b6;">FASE 2: Optimización de Z (función objetivo original)</span>';
+        seccionFase2.appendChild(tituloFase2);
+        
+        tablasFase2.forEach((tablaInfo, idx) => {
+            const tablaDiv = crearTablaHTML(tablaInfo);
+            seccionFase2.appendChild(tablaDiv);
+        });
+        
+        container.appendChild(seccionFase2);
+    }
+}
+
+// Crear tabla HTML (reutilizable)
+function crearTablaHTML(tablaInfo) {
+    const tablaDiv = document.createElement('div');
+    tablaDiv.className = 'simplex-table-container';
+    tablaDiv.style.marginBottom = '30px';
+    tablaDiv.style.padding = '15px 10px';
+    
+    const titulo = document.createElement('h4');
+    titulo.textContent = `Iteración ${tablaInfo.iteracion}`;
+    titulo.className = 'table-title';
+    tablaDiv.appendChild(titulo);
+    
+    if (tablaInfo.explicacion) {
+        const explicacion = document.createElement('p');
+        explicacion.textContent = tablaInfo.explicacion;
+        explicacion.style.fontStyle = 'italic';
+        explicacion.style.color = '#666';
+        explicacion.style.marginBottom = '15px';
+        explicacion.style.padding = '10px';
+        explicacion.style.background = '#f8f9fa';
+        explicacion.style.borderRadius = '5px';
+        tablaDiv.appendChild(explicacion);
+    }
+    
+        // Información de pivoteo
+        if (tablaInfo.col_entrante !== undefined && tablaInfo.fila_saliente !== undefined) {
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'table-info-pivot';
+            const nombresCols = tablaInfo.nombres_columnas || [];
+        const varEntrante = nombresCols[tablaInfo.col_entrante] || `Columna ${tablaInfo.col_entrante + 1}`;
+        const varSaliente = tablaInfo.variables_basicas && tablaInfo.variables_basicas[tablaInfo.fila_saliente] 
+            ? tablaInfo.variables_basicas[tablaInfo.fila_saliente] 
+            : `Fila ${tablaInfo.fila_saliente + 1}`;
+        
+        infoDiv.innerHTML = `
+            <strong>🔄 Operación de Pivoteo:</strong><br>
+            • <strong>Variable Entrante:</strong> ${varEntrante}<br>
+            • <strong>Variable Saliente:</strong> ${varSaliente}<br>
+            ${tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null ? `• <strong>Elemento Pivote:</strong> ${tablaInfo.elemento_pivote.toFixed(4)}` : ''}
+        `;
+        tablaDiv.appendChild(infoDiv);
+    }
+    
+    // Ratios
+    if (tablaInfo.ratios && tablaInfo.ratios.length > 0) {
+        const ratiosDiv = document.createElement('div');
+        ratiosDiv.className = 'table-info-ratios';
+        let ratiosHtml = '<strong>📊 Ratios:</strong><br>';
+        tablaInfo.ratios.forEach((ratio, idx) => {
+            const varBasica = tablaInfo.variables_basicas && tablaInfo.variables_basicas[idx] 
+                ? tablaInfo.variables_basicas[idx] 
+                : `Fila ${idx + 1}`;
+            const esInfinito = ratio === null || ratio === Infinity || ratio === undefined;
+            const ratioStr = esInfinito ? '∞' : ratio.toFixed(4);
+            const ratiosFinitos = tablaInfo.ratios.filter(r => r !== null && r !== Infinity && r !== undefined);
+            const esMinimo = !esInfinito && ratiosFinitos.length > 0 && ratio === Math.min(...ratiosFinitos);
+            ratiosHtml += `• ${varBasica}: ${ratioStr} ${esMinimo ? '<strong style="color: #27ae60;">(Mínimo)</strong>' : ''}<br>`;
+        });
+        ratiosDiv.innerHTML = ratiosHtml;
+        tablaDiv.appendChild(ratiosDiv);
+    }
+    
+    // Tabla
+    const tableWrapper = document.createElement('div');
+    tableWrapper.style.cssText = 'overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; margin-top: 15px; width: 100%;';
+    
+    const tabla = document.createElement('table');
+    tabla.className = 'simplex-table';
+    tabla.style.width = 'auto';
+    tabla.style.minWidth = '500px';
+    tabla.style.marginTop = '0';
+    tabla.style.borderCollapse = 'collapse';
+    tabla.style.fontSize = '0.95em';
+    tabla.style.margin = '0 auto';
+    
+    // Encabezados
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headerRow.className = 'table-header-row';
+    
+    const thVB = document.createElement('th');
+    thVB.textContent = 'VB';
+    thVB.title = 'Variables Básicas';
+    thVB.style.padding = '10px';
+    thVB.style.border = '1px solid #ddd';
+    thVB.style.textAlign = 'center';
+    thVB.style.fontWeight = 'bold';
+    headerRow.appendChild(thVB);
+    
+    const numVars = tablaInfo.tabla[0].length - 1;
+    const nombresColumnas = tablaInfo.nombres_columnas || [];
+    for (let i = 0; i < numVars; i++) {
+        const th = document.createElement('th');
+        const nombreVar = nombresColumnas[i] || `x${i+1}`;
+        th.textContent = nombreVar;
+        th.style.padding = '10px';
+        th.style.border = '1px solid #ddd';
+        th.style.textAlign = 'center';
+        th.style.fontWeight = 'bold';
+        
+        if (tablaInfo.col_entrante !== undefined && tablaInfo.col_entrante !== null && 
+            tablaInfo.col_entrante === i) {
+            th.className = 'table-col-entrante';
+            th.title = 'Variable Entrante';
+        }
+        
+        headerRow.appendChild(th);
+    }
+    
+    const thSol = document.createElement('th');
+    thSol.textContent = 'Solución';
+    thSol.title = 'Valores';
+    thSol.style.padding = '10px';
+    thSol.style.border = '1px solid #ddd';
+    thSol.style.textAlign = 'center';
+    thSol.style.fontWeight = 'bold';
+    headerRow.appendChild(thSol);
+    
+    thead.appendChild(headerRow);
+    tabla.appendChild(thead);
+    
+    // Cuerpo
+    const tbody = document.createElement('tbody');
+    const numFilas = tablaInfo.tabla.length - 1;
+    
+    tablaInfo.tabla.forEach((fila, filaIdx) => {
+        const tr = document.createElement('tr');
+        const esFilaObjetivo = filaIdx === 0;
+        
+        if (esFilaObjetivo) {
+            tr.className = 'table-row-objetivo';
+        } else {
+            if (tablaInfo.fila_saliente !== undefined && tablaInfo.fila_saliente !== null && 
+                tablaInfo.fila_saliente === filaIdx - 1) {
+                tr.className = 'table-row-saliente';
+            }
+        }
+        
+        const tdVB = document.createElement('td');
+        if (esFilaObjetivo) {
+            tdVB.textContent = tablaInfo.fase === 1 ? 'W' : 'Z';
+            tdVB.className = 'table-cell-vb table-cell-vb-objetivo';
+        } else {
+            const idxVarBasica = filaIdx - 1;
+            const varBasica = tablaInfo.variables_basicas && idxVarBasica >= 0 && 
+                idxVarBasica < tablaInfo.variables_basicas.length
+                ? tablaInfo.variables_basicas[idxVarBasica] 
+                : '-';
+            tdVB.textContent = varBasica;
+            tdVB.className = 'table-cell-vb';
+        }
+        tr.appendChild(tdVB);
+        
+        fila.forEach((valor, colIdx) => {
+            const td = document.createElement('td');
+            td.textContent = valor.toFixed(4);
+            td.style.padding = '8px';
+            td.style.border = '1px solid #ddd';
+            td.style.textAlign = 'center';
+            
+            if (colIdx === numVars) {
+                td.className = 'table-cell-solucion';
+            }
+            
+            if (tablaInfo.fila_saliente !== undefined && tablaInfo.fila_saliente !== null &&
+                tablaInfo.fila_saliente === filaIdx - 1 && tablaInfo.col_entrante === colIdx && 
+                tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null) {
+                td.className = 'table-cell-pivote';
+                td.title = `Elemento Pivote: ${tablaInfo.elemento_pivote.toFixed(4)}`;
+            }
+            else if (tablaInfo.col_entrante === colIdx && !esFilaObjetivo) {
+                td.className = 'table-cell-entrante';
+            }
+            
+            tr.appendChild(td);
+        });
+        
+        tbody.appendChild(tr);
+    });
+    
+    tabla.appendChild(tbody);
+    tableWrapper.appendChild(tabla);
+    tablaDiv.appendChild(tableWrapper);
+    return tablaDiv;
+}
+
+// Mostrar solución final del método Dos Fases
+function mostrarSolucionDosFases(datos) {
+    const titulo = document.getElementById('titulo-tipo-solucion-dos-fases');
+    const explicacion = document.getElementById('texto-explicacion-dos-fases');
+    const cajaFinal = document.getElementById('caja-resultado-final-dos-fases');
+    
+    titulo.textContent = datos.tipo_solucion || "Resultado";
+    explicacion.textContent = datos.explicacion || "Analizando...";
+    
+    if (datos.status === 'infeasible') {
+        titulo.style.color = "#e74c3c";
+        document.getElementById('analisis-box-dos-fases').style.borderLeftColor = "#e74c3c";
+        cajaFinal.innerHTML = "No hay solución factible";
+    } else if (datos.status === 'unbounded') {
+        titulo.style.color = "#e67e22";
+        document.getElementById('analisis-box-dos-fases').style.borderLeftColor = "#e67e22";
+        cajaFinal.innerHTML = "Problema no acotado";
+    } else {
+        titulo.style.color = "#27ae60";
+        document.getElementById('analisis-box-dos-fases').style.borderLeftColor = "#27ae60";
+        
+        let solucionHtml = `Valor Óptimo Z = <strong>${datos.z_optimo.toFixed(4)}</strong><br>`;
+        solucionHtml += `<div style="margin-top: 10px;">`;
+        datos.solucion.forEach((val, idx) => {
+            solucionHtml += `x<sub>${idx+1}</sub> = ${val.toFixed(4)}<br>`;
+        });
+        solucionHtml += `</div>`;
+        cajaFinal.innerHTML = solucionHtml;
+    }
+}
+
+// Toggle para cálculos Dos Fases
+function toggleCalculationsDosFases() {
+    const logContainer = document.getElementById('log-container-dos-fases');
+    const summaryDiv = document.getElementById('calculations-summary-dos-fases');
+    const toggleBtn = document.getElementById('toggle-calculations-dos-fases');
+    const isHidden = logContainer.style.display === 'none' || logContainer.style.display === '';
+    
+    if (isHidden) {
+        logContainer.style.display = 'block';
+        summaryDiv.style.display = 'none';
+        toggleBtn.innerHTML = '<span id="toggle-icon-dos-fases">▲</span> Ocultar Detalles';
+    } else {
+        logContainer.style.display = 'none';
+        summaryDiv.style.display = 'block';
+        toggleBtn.innerHTML = '<span id="toggle-icon-dos-fases">▼</span> Ver Detalles';
     }
 }
 
@@ -1981,22 +2930,22 @@ function initDarkMode() {
 function applyTheme(theme) {
     const html = document.documentElement;
     const toggleButton = document.getElementById('dark-mode-toggle');
-    const icon = document.getElementById('dark-mode-icon');
     
     if (theme === 'dark') {
         html.setAttribute('data-theme', 'dark');
-        if (icon) icon.textContent = '☀️';
-        if (toggleButton) toggleButton.setAttribute('title', 'Cambiar a modo claro');
+        if (toggleButton) {
+            toggleButton.setAttribute('aria-checked', 'true');
+            toggleButton.setAttribute('title', 'Cambiar a modo claro');
+        }
     } else {
         html.setAttribute('data-theme', 'light');
-        if (icon) icon.textContent = '🌙';
-        if (toggleButton) toggleButton.setAttribute('title', 'Cambiar a modo oscuro');
+        if (toggleButton) {
+            toggleButton.setAttribute('aria-checked', 'false');
+            toggleButton.setAttribute('title', 'Cambiar a modo oscuro');
+        }
     }
     
-    // Save preference
     localStorage.setItem('theme', theme);
-    
-    // Update Plotly charts if they exist
     updatePlotlyCharts(theme);
 }
 

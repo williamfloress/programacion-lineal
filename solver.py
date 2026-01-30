@@ -1,4 +1,5 @@
 import numpy as np
+from metodo_dos_fases import MetodoDosFases
 
 def convertir_restricciones_relacionales(restricciones_str):
     """
@@ -885,21 +886,47 @@ class MetodoSimplex:
         # Analizar tipo de solución
         fila_z_final = tabla[0, :num_cols_totales]
         
-        # Contar variables no básicas con coeficiente cero en la fila Z
-        # Si hay variables no básicas con coeficiente cero, pueden entrar sin cambiar Z (solución múltiple)
+        # Contar variables NO básicas (excluyendo artificiales) con coeficiente cero en la fila Z
         vars_no_basicas_cero = 0
+        nombres_vars_nb_cero = []
+        
         for j in range(num_cols_totales):
-            if j not in indices_basicas:  # Variable no básica
+            # Excluir variables artificiales del análisis
+            es_artificial = (j >= num_vars + num_holgura + num_exceso)
+            
+            if j not in indices_basicas and not es_artificial:  # Variable no básica (no artificial)
                 if abs(fila_z_final[j]) < 1e-9:  # Coeficiente aproximadamente cero
                     vars_no_basicas_cero += 1
+                    # Determinar nombre para mostrar
+                    if j < num_vars:
+                        nombres_vars_nb_cero.append(f"x{j+1}")
+                    elif j < num_vars + num_holgura:
+                        nombres_vars_nb_cero.append(f"s{j - num_vars + 1}")
+                    else:
+                        nombres_vars_nb_cero.append(f"e{j - num_vars - num_holgura + 1}")
+        
+        # Verificar degeneración (variables básicas con valor cero)
+        vars_basicas_cero = 0
+        for i, idx_basica in enumerate(indices_basicas):
+            # Excluir artificiales
+            es_artificial = (idx_basica >= num_vars + num_holgura + num_exceso)
+            if not es_artificial:
+                fila_rest = i + 1
+                if abs(tabla[fila_rest, -1]) < 1e-9:  # Valor en solución ≈ 0
+                    vars_basicas_cero += 1
         
         # Determinar tipo de solución y explicación
         if vars_no_basicas_cero > 0:
             tipo_solucion = "Solución Múltiple (Infinitas Soluciones)"
             explicacion = (f"Se encontró una solución óptima, pero existen {vars_no_basicas_cero} variable(s) no básica(s) "
-                         f"con coeficiente cero en la fila Z. Esto significa que estas variables pueden entrar a la base "
-                         f"sin cambiar el valor de Z, generando infinitas soluciones óptimas a lo largo de un borde de la "
-                         f"región factible.")
+                         f"({', '.join(nombres_vars_nb_cero)}) con coeficiente cero en la fila Z. "
+                         f"Esto significa que estas variables pueden entrar a la base sin cambiar el valor de Z, "
+                         f"generando infinitas soluciones óptimas a lo largo de un borde de la región factible.")
+        elif vars_basicas_cero > 0:
+            tipo_solucion = "Solución Única (Degenerada)"
+            explicacion = (f"Se encontró una solución óptima única, pero hay {vars_basicas_cero} variable(s) básica(s) "
+                         f"con valor cero. Esto se llama degeneración y ocurre cuando múltiples restricciones se "
+                         f"cruzan en el mismo punto óptimo. A pesar de la degeneración, la solución es única.")
         else:
             tipo_solucion = "Solución Única"
             explicacion = (f"Se encontró una solución óptima única. Todos los coeficientes en la fila Z son del signo "

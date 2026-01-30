@@ -2,24 +2,24 @@
 
 Una aplicación web interactiva para resolver problemas de Programación Lineal con 2 variables utilizando el método gráfico. La aplicación calcula automáticamente los vértices de la región factible, evalúa la función objetivo y proporciona una visualización gráfica interactiva de la solución.
 
-## 🚀 Características
+## Características
 
-- ✅ Resolución de problemas de Programación Lineal con 2 variables (x, y)
-- ✅ Soporte para maximización y minimización
-- ✅ Restricciones con operadores: ≤, ≥, =
-- ✅ Cálculo automático de intersecciones y vértices factibles
-- ✅ Visualización gráfica interactiva de la región factible
-- ✅ Registro paso a paso del proceso de solución
-- ✅ Interfaz web intuitiva y fácil de usar
+- Resolución de problemas de Programación Lineal con 2 variables (x, y)
+- Soporte para maximización y minimización
+- Restricciones con operadores: ≤, ≥, =
+- Cálculo automático de intersecciones y vértices factibles
+- Visualización gráfica interactiva de la región factible
+- Registro paso a paso del proceso de solución
+- Interfaz web intuitiva y fácil de usar
 
-## 📋 Requisitos
+## Requisitos
 
 - Python 3.7 o superior
 - Flask
 - NumPy
 - Navegador web moderno
 
-## 🔧 Instalación
+## Instalación
 
 1. Clona el repositorio:
 ```bash
@@ -43,7 +43,7 @@ Y luego ejecuta:
 pip install -r requirements.txt
 ```
 
-## 🎯 Uso
+## Uso
 
 1. Inicia el servidor Flask:
 ```bash
@@ -64,7 +64,7 @@ http://localhost:5000
    - Visualización gráfica de la región factible
    - Registro paso a paso del proceso
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 programacion-lineal/
@@ -76,14 +76,14 @@ programacion-lineal/
 └── README.md             # Este archivo
 ```
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 - **Backend**: Python, Flask
 - **Cálculos Matemáticos**: NumPy
 - **Frontend**: HTML, CSS, JavaScript
 - **Visualización**: Plotly.js
 
-## 📖 Ejemplo de Uso
+## Ejemplo de Uso
 
 ### Problema de Ejemplo:
 
@@ -103,7 +103,7 @@ La aplicación calculará automáticamente:
 - El valor óptimo de Z en cada vértice
 - El punto óptimo y su valor correspondiente
 
-## 🔍 Cómo Funciona
+## Cómo Funciona
 
 1. **Cálculo de Intersecciones**: El sistema resuelve sistemas de ecuaciones 2x2 para encontrar todos los puntos de intersección entre las restricciones y los ejes coordenados.
 
@@ -115,13 +115,13 @@ La aplicación calculará automáticamente:
 
 5. **Visualización**: Se genera un gráfico interactivo mostrando las restricciones, la región factible y el punto óptimo.
 
-## 📝 Notas
+## Notas
 
 - La aplicación está diseñada para problemas con exactamente 2 variables.
 - Se asume que las variables son no negativas (x ≥ 0, y ≥ 0).
 - Los cálculos utilizan tolerancias numéricas para manejar errores de punto flotante.
 
-## 🤝 Contribuciones
+## Contribuciones
 
 Las contribuciones son bienvenidas. Por favor:
 
@@ -131,15 +131,15 @@ Las contribuciones son bienvenidas. Por favor:
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
 
-## 👤 Autor
+## Autor
 
-Tu nombre - [@tu-usuario](https://github.com/tu-usuario)
+William Flores - [@williamfloress](https://github.com/williamfloress)
 
-## 🙏 Agradecimientos
+## Agradecimientos
 
 - NumPy por las herramientas de cálculo matemático
 - Plotly.js por la visualización interactiva

@@ -13,9 +13,20 @@
 </head>
 <body>
 
-    <!-- Dark Mode Toggle Button -->
-    <button class="dark-mode-toggle" id="dark-mode-toggle" aria-label="Toggle dark mode" title="Cambiar modo oscuro/claro">
-        <span id="dark-mode-icon">🌙</span>
+    <!-- Theme Toggle: pill switch (sun = light, moon = dark) -->
+    <button type="button" class="theme-toggle" id="dark-mode-toggle" role="switch" aria-checked="false" aria-label="Cambiar tema claro/oscuro" title="Cambiar modo oscuro/claro">
+        <span class="theme-toggle-track">
+            <span class="theme-toggle-slot theme-toggle-slot-sun" aria-hidden="true">
+                <svg class="theme-toggle-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            </span>
+            <span class="theme-toggle-slot theme-toggle-slot-moon" aria-hidden="true">
+                <svg class="theme-toggle-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </span>
+            <span class="theme-toggle-thumb" aria-hidden="true">
+                <svg class="theme-toggle-thumb-icon theme-toggle-thumb-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                <svg class="theme-toggle-thumb-icon theme-toggle-thumb-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </span>
+        </span>
     </button>
 
     <h1>Calculadora Programación Lineal</h1>
@@ -24,6 +35,7 @@
     <div class="tabs-container">
         <button class="tab-button active" onclick="cambiarMetodo('grafico')">Método Gráfico</button>
         <button class="tab-button" onclick="cambiarMetodo('simplex')">Método Simplex</button>
+        <button class="tab-button" onclick="cambiarMetodo('dos-fases')">Método 2 Fases</button>
     </div>
 
     <!-- Método Gráfico -->
@@ -210,6 +222,84 @@
         </div>
     </div>
 
+    <!-- Método 2 Fases -->
+    <div id="metodo-dos-fases" class="metodo-section" style="display:none;">
+        <div class="box">
+            <h3>1. Función Objetivo (Z)</h3>
+            <select id="objetivo-dos-fases">
+                <option value="max">Maximizar</option>
+                <option value="min">Minimizar</option>
+            </select>
+            <div id="z-coefs-container-dos-fases" style="margin-top: 10px;">
+                <span>Z = </span>
+                <input type="number" class="z-coef-dos-fases" value="3" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off">
+                <span> X₁ </span>
+                <select class="z-op-dos-fases" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="z-coef-dos-fases" value="2" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off">
+                <span> X₂</span>
+            </div>
+            <br>
+            <button onclick="agregarVariableDosFases()" style="margin-top: 10px; background: #27ae60;">+ Agregar Variable</button>
+            <button onclick="eliminarVariableDosFases()" style="margin-top: 10px; background: #e74c3c;">- Eliminar Variable</button>
+        </div>
+
+        <div class="box">
+            <!-- Título con botones de modo -->
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <h3 style="margin: 0;">2. Restricciones</h3>
+                <div class="restriction-mode-buttons-dos-fases">
+                    <button class="restriction-mode-btn-dos-fases active" onclick="cambiarModoRestriccionesDosFases('coeficientes')" data-mode="coeficientes">
+                        Coeficientes
+                    </button>
+                    <button class="restriction-mode-btn-dos-fases" onclick="cambiarModoRestriccionesDosFases('natural')" data-mode="natural">
+                        Forma Natural
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modo coeficientes (actual) -->
+            <div id="modo-coeficientes-dos-fases">
+                <div id="lista-restricciones-dos-fases">
+                    <!-- Las restricciones iniciales se agregarán dinámicamente -->
+                </div>
+                <br>
+                <button onclick="agregarRestriccionDosFases()" style="margin-top: 10px; background: #3498db;">+ Agregar Restricción</button>
+                <button onclick="eliminarRestriccionDosFases()" style="margin-top: 10px; background: #e74c3c;">- Eliminar Restricción</button>
+            </div>
+            
+            <!-- Modo forma natural (nuevo) -->
+            <div id="modo-natural-dos-fases" style="display: none;">
+                <div style="margin-bottom: 10px;">
+                    <label for="restricciones-natural-dos-fases" style="display: block; margin-bottom: 5px; font-weight: bold;">
+                        Ingresa las restricciones (una por línea):
+                    </label>
+                    <textarea 
+                        id="restricciones-natural-dos-fases" 
+                        rows="6" 
+                        style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid var(--border-primary); border-radius: 4px;"
+                        placeholder="Ejemplos:&#10;x1 + x2 <= 10&#10;2x1 + 3x2 >= 20&#10;x1 - x2 = 5&#10;x1 <= 30&#10;x2 >= 5"
+                    ></textarea>
+                </div>
+                <div class="info-box">
+                    <strong>💡 Tips:</strong>
+                    <ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9em;">
+                        <li>Usa "x1", "x2", "x3", etc. para las variables</li>
+                        <li>Usa ">=", "<=", o "=" para los operadores</li>
+                        <li>Ejemplos: "x1 + x2 <= 10", "2x1 + 3x2 >= 20", "x1 - x2 = 5"</li>
+                        <li>El método de 2 Fases es ideal cuando hay restricciones >= o =</li>
+                    </ul>
+                </div>
+                <button onclick="convertirRestriccionesNaturalesDosFases()" style="margin-top: 10px; background: #16a085;">Convertir a Coeficientes</button>
+            </div>
+            
+            <br><br>
+            <button onclick="resolverDosFases()">CALCULAR SOLUCIÓN (2 FASES)</button>
+        </div>
+    </div>
+
     <!-- Resultados Método Gráfico -->
     <div class="box" id="resultados" style="display:none;">
         
@@ -273,6 +363,31 @@
             <h2 id="titulo-tipo-solucion-simplex">Solución Final</h2>
             <p id="texto-explicacion-simplex"></p>
             <div id="caja-resultado-final-simplex" class="resultado-final-box" style="margin-top: 15px; font-size: 1.2em;"></div>
+        </div>
+
+    </div>
+
+    <!-- Resultados Método 2 Fases -->
+    <div class="box" id="resultados-dos-fases" style="display:none;">
+        
+        <div class="calculations-header">
+            <h3 style="display: inline-block; margin: 0; border-bottom: 3px solid #7f8c8d;">
+                Pasos del Método de las Dos Fases
+            </h3>
+            <button id="toggle-calculations-dos-fases" class="toggle-btn" onclick="toggleCalculationsDosFases()">
+                <span id="toggle-icon-dos-fases">▼</span> Ver Detalles
+            </button>
+        </div>
+        <div id="calculations-summary-dos-fases" class="calculations-summary"></div>
+        <div id="log-container-dos-fases" class="timeline" style="display:none;"></div>
+
+        <h3><span style="border-bottom: 3px solid #9b59b6;">Tablas del Método de 2 Fases</span></h3>
+        <div id="tablas-dos-fases-container"></div>
+
+        <div id="analisis-box-dos-fases" class="analysis-box">
+            <h2 id="titulo-tipo-solucion-dos-fases">Solución Final</h2>
+            <p id="texto-explicacion-dos-fases"></p>
+            <div id="caja-resultado-final-dos-fases" class="resultado-final-box" style="margin-top: 15px; font-size: 1.2em;"></div>
         </div>
 
     </div>

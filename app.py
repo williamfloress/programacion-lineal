@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from solver import MetodoGrafico, MetodoSimplex, convertir_restricciones_relacionales # Importamos las clases y funciones
+from solver import MetodoGrafico, MetodoSimplex, convertir_restricciones_relacionales, MetodoDosFases # Importamos las clases y funciones
 
 app = Flask(__name__)
 
@@ -57,6 +57,31 @@ def calcular_simplex():
     resultado = solver.resolver()
     
     return jsonify(resultado) # Enviamos la respuesta a Javascript
+
+@app.route('/calcular-dos-fases', methods=['POST'])
+def calcular_dos_fases():
+    """Endpoint para resolver usando el Método de las Dos Fases."""
+    data = request.json
+    
+    # Extraemos los datos del JSON (mismo formato que Simplex)
+    c = [float(x) for x in data['z_coefs']]
+    objetivo = data['objetivo']
+    
+    restricciones = data['restricciones']
+    A = []
+    b = []
+    operadores = []
+    
+    for r in restricciones:
+        A.append([float(x) for x in r['coefs']])
+        b.append(float(r['val']))
+        operadores.append(r['op'])
+    
+    # Llamamos al método de Dos Fases
+    solver = MetodoDosFases(c, A, b, operadores, objetivo)
+    resultado = solver.resolver()
+    
+    return jsonify(resultado)
 
 @app.route('/convertir-restricciones', methods=['POST'])
 def convertir_restricciones():

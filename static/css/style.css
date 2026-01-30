@@ -43,8 +43,8 @@
     --error-border: #e74c3c;
     
     /* Gradient colors */
-    --gradient-primary-start: #667eea;
-    --gradient-primary-end: #764ba2;
+    --gradient-primary-start: #2c7873;
+    --gradient-primary-end: #1f5b57;
     --gradient-section-start: #f8f9fa;
     --gradient-section-end: #e9ecef;
     --gradient-point-start: #ffeaa7;
@@ -105,8 +105,8 @@
     --error-border: #ec7063;
     
     /* Gradient colors (adjusted for dark mode) */
-    --gradient-primary-start: #5a67d8;
-    --gradient-primary-end: #6b46c1;
+    --gradient-primary-start: #3a9b94;
+    --gradient-primary-end: #2d7873;
     --gradient-section-start: #3a3a3a;
     --gradient-section-end: #2d2d2d;
     --gradient-point-start: #8b6f47;
@@ -144,7 +144,6 @@ h1, h2, h3 {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
-    border-bottom: 2px solid var(--accent-primary);
     transition: border-color var(--transition-speed) ease;
 }
 
@@ -793,6 +792,9 @@ button:hover {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     margin-bottom: 20px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px var(--shadow-sm);
 }
 
 .simplex-table {
@@ -854,7 +856,7 @@ button:hover {
 @media screen and (max-width: 480px) {
     body {
         padding: 12px;
-        padding-right: 56px; /* avoid overlap with fixed dark-mode toggle */
+        padding-right: 110px; /* avoid overlap with fixed theme toggle (pill) */
         font-size: 14px;
         max-width: 100%;
     }
@@ -863,6 +865,8 @@ button:hover {
         font-size: 1.4em;
         margin-bottom: 14px;
         line-height: 1.2;
+        max-width: calc(100vw - 120px); /* prevent overlap with theme toggle */
+        word-wrap: break-word;
     }
     
     h2 {
@@ -878,7 +882,6 @@ button:hover {
     .tabs-container {
         gap: 8px;
         margin-bottom: 20px;
-        border-bottom: 3px solid var(--accent-primary);
     }
     
     .tab-button {
@@ -1265,14 +1268,34 @@ button:hover {
         border: 2px solid var(--border-primary);
     }
     
-    .dark-mode-toggle {
-        width: 48px;
-        height: 48px;
-        min-width: 44px;
+    .theme-toggle {
+        width: 88px;
+        height: 44px;
+        min-width: 80px;
         min-height: 44px;
         top: 10px;
         right: 10px;
-        font-size: 1.3em;
+    }
+
+    .theme-toggle-thumb {
+        width: 34px;
+        height: 34px;
+        top: 5px;
+        left: 5px;
+    }
+
+    .theme-toggle-thumb .theme-toggle-thumb-icon {
+        width: 18px;
+        height: 18px;
+    }
+
+    [data-theme="dark"] .theme-toggle-thumb {
+        left: calc(100% - 39px);
+    }
+
+    .theme-toggle-icon-svg {
+        width: 18px;
+        height: 18px;
     }
     
     .calculations-header {
@@ -1392,7 +1415,7 @@ button:hover {
 }
 
 @media screen and (max-width: 360px) {
-    body { padding: 10px 52px 10px 10px; font-size: 13px; }
+    body { padding: 10px 96px 10px 10px; font-size: 13px; }
     .box { padding: 16px 12px; }
     .tab-button { padding: 14px 12px; font-size: 0.95em; }
     h1 { font-size: 1.25em; }
@@ -1514,6 +1537,208 @@ textarea:focus {
     color: var(--text-tertiary);
 }
 
+/* ========================================
+   TABLE HIGHLIGHTING CLASSES
+   (for Simplex and Two-Phase Method tables)
+   ======================================== */
+
+/* Info box for pivot operations (yellow/warning) */
+.table-info-pivot {
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 5px;
+}
+
+[data-theme="dark"] .table-info-pivot {
+    background: #3d3416;
+    border-left-color: #f39c12;
+    color: #ffd966;
+}
+
+/* Info box for ratios (cyan/info) */
+.table-info-ratios {
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #d1ecf1;
+    border-left: 4px solid #17a2b8;
+    border-radius: 5px;
+}
+
+[data-theme="dark"] .table-info-ratios {
+    background: #1a3841;
+    border-left-color: #5dade2;
+    color: #a8dadc;
+}
+
+/* Table title (purple) */
+.table-title {
+    color: #9b59b6;
+    border-bottom: 2px solid #9b59b6;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+[data-theme="dark"] .table-title {
+    color: #bb8fce;
+    border-bottom-color: #bb8fce;
+}
+
+/* Table explanation box */
+.table-explanation {
+    font-style: italic;
+    color: #666;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+[data-theme="dark"] .table-explanation {
+    color: #b0b0b0;
+    background: #3a3a3a;
+}
+
+/* Table header row */
+.table-header-row {
+    background: #9b59b6 !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .table-header-row {
+    background: #6a3e85 !important;
+    color: #ffffff !important;
+}
+
+/* Column header for entrance variable */
+.table-col-entrante {
+    background: #ffc107 !important;
+    color: #000 !important;
+}
+
+[data-theme="dark"] .table-col-entrante {
+    background: #f39c12 !important;
+    color: #1a1a1a !important;
+}
+
+/* Row for objective function (Z or W) */
+.table-row-objetivo {
+    background: #e8d5f2 !important;
+    font-weight: bold;
+}
+
+[data-theme="dark"] .table-row-objetivo {
+    background: #4a3456 !important;
+    color: #e0d0f0 !important;
+}
+
+/* Row for exit variable */
+.table-row-saliente {
+    background: #fff3cd !important;
+}
+
+[data-theme="dark"] .table-row-saliente {
+    background: #3d3416 !important;
+}
+
+/* Cell in entrance column */
+.table-cell-entrante {
+    background: #fff3cd !important;
+}
+
+[data-theme="dark"] .table-cell-entrante {
+    background: #3d3416 !important;
+}
+
+/* Solution column cells */
+.table-cell-solucion {
+    background: #f0f0f0 !important;
+    font-weight: bold;
+}
+
+[data-theme="dark"] .table-cell-solucion {
+    background: #3a3a3a !important;
+    color: #e0e0e0 !important;
+}
+
+/* Pivot element cell */
+.table-cell-pivote {
+    background: #ffc107 !important;
+    color: #000 !important;
+    font-weight: bold;
+    border: 3px solid #ff9800 !important;
+}
+
+[data-theme="dark"] .table-cell-pivote {
+    background: #f39c12 !important;
+    color: #1a1a1a !important;
+    border-color: #e67e22 !important;
+}
+
+/* Basic variable column (VB) */
+.table-cell-vb {
+    font-weight: bold;
+    color: #9b59b6;
+    padding: 8px;
+    border: 1px solid var(--border-primary);
+    text-align: center;
+    background: #f8f9fa;
+}
+
+[data-theme="dark"] .table-cell-vb {
+    color: #bb8fce;
+    background: #2a2a2a;
+}
+
+/* Objective row VB cell */
+.table-cell-vb-objetivo {
+    background: #e8d5f2;
+}
+
+[data-theme="dark"] .table-cell-vb-objetivo {
+    background: #4a3456;
+    color: #e0d0f0;
+}
+
+/* Success message */
+.message-success {
+    margin-top: 10px;
+    padding: 10px;
+    background: #d4edda;
+    color: #155724;
+    border-radius: 4px;
+}
+
+[data-theme="dark"] .message-success {
+    background: #1e4d2e;
+    color: #52c97a;
+}
+
+/* General info box (light blue) */
+.table-info-general {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #e8f4f8;
+    border-radius: 8px;
+    border-left: 4px solid #9b59b6;
+}
+
+[data-theme="dark"] .table-info-general {
+    background: #1a3a42;
+    border-left-color: #bb8fce;
+    color: #e0e0e0;
+}
+
+/* Ensure text in highlighted cells is readable */
+[data-theme="dark"] .simplex-table td {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .simplex-table tbody tr:hover {
+    background-color: #3a3a3a;
+}
+
 /* Button variants (these will override default button styles when needed) */
 .btn-primary {
     background: var(--accent-primary) !important;
@@ -1531,33 +1756,119 @@ textarea:focus {
     background: #16a085 !important;
 }
 
-/* Dark Mode Toggle Button */
-.dark-mode-toggle {
+/* Theme Toggle – pill switch (sun = light, moon = dark) */
+.theme-toggle {
+    --thumb-bg: #3F51B5;
+    --track-light: #e5e7eb;
+    --track-dark: #374151;
+    --icon-inactive: #9ca3af;
+}
+
+.theme-toggle {
     position: fixed;
     top: 20px;
     right: 20px;
     z-index: 1000;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-primary);
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 96px;
+    height: 44px;
+    min-width: 88px;
+    min-height: 44px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5em;
-    box-shadow: 0 2px 8px var(--shadow-sm);
-    transition: all var(--transition-speed) ease;
+    box-shadow: none;
+    transition: transform var(--transition-speed) ease;
 }
 
-.dark-mode-toggle:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px var(--shadow-md);
+.theme-toggle:hover {
+    transform: scale(1.05);
 }
 
-.dark-mode-toggle:active {
-    transform: scale(0.95);
+.theme-toggle:active {
+    transform: scale(0.98);
+}
+
+.theme-toggle:focus,
+.theme-toggle:focus-visible {
+    outline: none;
+    background: transparent;
+}
+
+.theme-toggle-track {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    background-color: var(--track-light);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
+    transition: background-color var(--transition-speed) ease;
+}
+
+[data-theme="dark"] .theme-toggle-track {
+    background-color: var(--track-dark);
+}
+
+.theme-toggle-slot {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+.theme-toggle-icon-svg {
+    width: 20px;
+    height: 20px;
+    color: var(--icon-inactive);
+    transition: color var(--transition-speed) ease;
+}
+
+.theme-toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: var(--thumb-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: transform var(--transition-speed) ease, left var(--transition-speed) ease;
+}
+
+.theme-toggle-thumb .theme-toggle-thumb-icon {
+    width: 20px;
+    height: 20px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.theme-toggle-thumb .theme-toggle-thumb-sun {
+    display: block;
+}
+
+.theme-toggle-thumb .theme-toggle-thumb-moon {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle-thumb {
+    left: calc(100% - 41px);
+}
+
+[data-theme="dark"] .theme-toggle-thumb .theme-toggle-thumb-sun {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle-thumb .theme-toggle-thumb-moon {
+    display: block;
 }
 
 /* Asegurar que los elementos interactivos sean fáciles de tocar */
@@ -1569,7 +1880,7 @@ textarea:focus {
     .restriction-mode-btn,
     .restriction-mode-btn-simplex,
     .toggle-btn,
-    .dark-mode-toggle {
+    .theme-toggle {
         min-height: 44px;
         min-width: 44px;
         touch-action: manipulation;
@@ -1584,9 +1895,9 @@ textarea:focus {
         margin-top: 10px;
     }
     
-    .dark-mode-toggle {
-        width: 56px;
-        height: 56px;
+    .theme-toggle {
+        min-width: 88px;
+        min-height: 44px;
         top: 15px;
         right: 15px;
     }
