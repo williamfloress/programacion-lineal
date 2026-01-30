@@ -109,6 +109,15 @@
                     <input type="number" class="res-val" value="80" style="width: 60px;">
                 </div>
                 </div>
+                
+                <!-- Aviso sobre restricciones de no negatividad implícitas -->
+                <div style="margin-top: 15px; padding: 15px; background: var(--bg-quaternary); border-radius: 8px; border-left: 4px solid var(--accent-primary);">
+                    <p style="margin: 0; font-size: 0.9em; color: var(--text-secondary); line-height: 1.5;">
+                        <strong>Nota:</strong> Las restricciones de no negatividad (X ≥ 0, Y ≥ 0) están incluidas de forma implícita en los cálculos. 
+                        La calculadora considera automáticamente que todas las variables son no negativas, por lo que no es necesario agregarlas manualmente.
+                    </p>
+                </div>
+                
                 <br>
                 <button onclick="agregarRestriccionGrafico()" style="margin-top: 10px; background: #3498db;">+ Agregar Restricción</button>
                 <button onclick="eliminarRestriccionGrafico()" style="margin-top: 10px; background: #e74c3c;">- Eliminar Restricción</button>
@@ -128,7 +137,7 @@
                     ></textarea>
                 </div>
                 <div class="info-box">
-                    <strong>💡 Tips:</strong>
+                    <strong>Información:</strong>
                     <ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9em;">
                         <li>Usa "x" y "y" para las variables</li>
                         <li>Usa ">=", "<=", o "=" para los operadores</li>
@@ -139,7 +148,7 @@
                 <button onclick="convertirRestriccionesNaturales()" style="margin-top: 10px; background: #16a085;">Convertir a Coeficientes</button>
             </div>
             
-            <br><br>
+            <br>
             <button onclick="resolverProblema()">CALCULAR SOLUCIÓN</button>
         </div>
     </div>
@@ -187,6 +196,15 @@
                 <div id="lista-restricciones-simplex">
                     <!-- Las restricciones iniciales se agregarán dinámicamente -->
                 </div>
+                
+                <!-- Aviso sobre restricciones de no negatividad implícitas -->
+                <div style="margin-top: 15px; padding: 15px; background: var(--bg-quaternary); border-radius: 8px; border-left: 4px solid var(--accent-tertiary);">
+                    <p style="margin: 0; font-size: 0.9em; color: var(--text-secondary); line-height: 1.5;">
+                        <strong>Nota:</strong> Las restricciones de no negatividad (x₁ ≥ 0, x₂ ≥ 0, ...) están incluidas de forma implícita en los cálculos. 
+                        La calculadora considera automáticamente que todas las variables son no negativas.
+                    </p>
+                </div>
+                
                 <br>
                 <button onclick="agregarRestriccionSimplex()" style="margin-top: 10px; background: #3498db;">+ Agregar Restricción</button>
                 <button onclick="eliminarRestriccionSimplex()" style="margin-top: 10px; background: #e74c3c;">- Eliminar Restricción</button>
@@ -206,7 +224,7 @@
                     ></textarea>
                 </div>
                 <div class="info-box">
-                    <strong>💡 Tips:</strong>
+                    <strong>Información:</strong>
                     <ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9em;">
                         <li>Usa "x1", "x2", "x3", etc. para las variables</li>
                         <li>Usa ">=", "<=", o "=" para los operadores</li>
@@ -217,7 +235,7 @@
                 <button onclick="convertirRestriccionesNaturalesSimplex()" style="margin-top: 10px; background: #16a085;">Convertir a Coeficientes</button>
             </div>
             
-            <br><br>
+            <br>
             <button onclick="resolverSimplex()">CALCULAR SOLUCIÓN (SIMPLEX)</button>
         </div>
     </div>
@@ -265,6 +283,15 @@
                 <div id="lista-restricciones-dos-fases">
                     <!-- Las restricciones iniciales se agregarán dinámicamente -->
                 </div>
+                
+                <!-- Aviso sobre restricciones de no negatividad implícitas -->
+                <div style="margin-top: 15px; padding: 15px; background: var(--bg-quaternary); border-radius: 8px; border-left: 4px solid var(--accent-tertiary);">
+                    <p style="margin: 0; font-size: 0.9em; color: var(--text-secondary); line-height: 1.5;">
+                        <strong>Nota:</strong> Las restricciones de no negatividad (x₁ ≥ 0, x₂ ≥ 0, ...) están incluidas de forma implícita en los cálculos. 
+                        La calculadora considera automáticamente que todas las variables son no negativas.
+                    </p>
+                </div>
+                
                 <br>
                 <button onclick="agregarRestriccionDosFases()" style="margin-top: 10px; background: #3498db;">+ Agregar Restricción</button>
                 <button onclick="eliminarRestriccionDosFases()" style="margin-top: 10px; background: #e74c3c;">- Eliminar Restricción</button>
@@ -284,7 +311,7 @@
                     ></textarea>
                 </div>
                 <div class="info-box">
-                    <strong>💡 Tips:</strong>
+                    <strong>Información:</strong>
                     <ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9em;">
                         <li>Usa "x1", "x2", "x3", etc. para las variables</li>
                         <li>Usa ">=", "<=", o "=" para los operadores</li>
@@ -295,7 +322,7 @@
                 <button onclick="convertirRestriccionesNaturalesDosFases()" style="margin-top: 10px; background: #16a085;">Convertir a Coeficientes</button>
             </div>
             
-            <br><br>
+            <br>
             <button onclick="resolverDosFases()">CALCULAR SOLUCIÓN (2 FASES)</button>
         </div>
     </div>
@@ -319,7 +346,7 @@
 
         <h3><span style="border-bottom: 3px solid #27ae60;">3. Tabla de Evaluación de Vértices</span></h3>
         <div class="info-box" style="font-size: 0.9em;">
-            <strong>💡 Explicación:</strong> Esta tabla muestra cómo se calcula el valor de la función objetivo Z para cada vértice de la región factible. 
+            <strong>Explicación:</strong> Esta tabla muestra cómo se calcula el valor de la función objetivo Z para cada vértice de la región factible. 
             El cálculo se realiza sustituyendo las coordenadas (X, Y) del vértice en la función objetivo.
         </div>
         <table class="tabla-resultados">
@@ -391,6 +418,17 @@
         </div>
 
     </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>
+            Proyecto Universitario realizado por:  
+            <a href="https://github.com/williamfloress" target="_blank" rel="noopener noreferrer">
+                William Flores
+            </a>
+        </p>
+        <p>Universidad de Oriente - 2026.</p>
+    </footer>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>

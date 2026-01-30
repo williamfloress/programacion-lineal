@@ -132,7 +132,7 @@ async function resolverProblema() {
             currentSection.className = 'calculation-section';
             const header = document.createElement('div');
             header.className = 'section-header';
-            header.innerHTML = `<span class="section-icon">📋</span><span class="section-title">${paso}</span>`;
+            header.innerHTML = `<span class="section-title">${paso}</span>`;
             currentSection.appendChild(header);
             const content = document.createElement('div');
             content.className = 'section-content';
@@ -147,7 +147,7 @@ async function resolverProblema() {
             currentSection.className = 'calculation-section intersection-section';
             const header = document.createElement('div');
             header.className = 'section-header';
-            header.innerHTML = `<span class="section-icon">🔀</span><span class="section-title">${paso}</span>`;
+            header.innerHTML = `<span class="section-title">${paso}</span>`;
             currentSection.appendChild(header);
             const content = document.createElement('div');
             content.className = 'section-content';
@@ -162,7 +162,7 @@ async function resolverProblema() {
             currentSection.className = 'calculation-section feasibility-section';
             const header = document.createElement('div');
             header.className = 'section-header';
-            header.innerHTML = `<span class="section-icon">✅</span><span class="section-title">${paso}</span>`;
+            header.innerHTML = `<span class="section-title">${paso}</span>`;
             currentSection.appendChild(header);
             const content = document.createElement('div');
             content.className = 'section-content';
@@ -177,7 +177,7 @@ async function resolverProblema() {
             currentSection.className = 'calculation-section evaluation-section';
             const header = document.createElement('div');
             header.className = 'section-header';
-            header.innerHTML = `<span class="section-icon">📊</span><span class="section-title">${paso}</span>`;
+            header.innerHTML = `<span class="section-title">${paso}</span>`;
             currentSection.appendChild(header);
             const content = document.createElement('div');
             content.className = 'section-content';
@@ -222,7 +222,7 @@ async function resolverProblema() {
             currentGroup.className = 'point-verification-group';
             const pointHeader = document.createElement('div');
             pointHeader.className = 'point-header';
-            pointHeader.innerHTML = `<span class="point-icon">📍</span><span class="point-coords">${paso}</span>`;
+            pointHeader.innerHTML = `<span class="point-coords">${paso}</span>`;
             currentGroup.appendChild(pointHeader);
             const checksContainer = document.createElement('div');
             checksContainer.className = 'checks-container';
@@ -257,7 +257,7 @@ async function resolverProblema() {
             currentGroup.className = 'vertex-evaluation-group';
             const vertexHeader = document.createElement('div');
             vertexHeader.className = 'vertex-header';
-            vertexHeader.innerHTML = `<span class="vertex-icon">🎯</span><span class="vertex-title">${paso}</span>`;
+            vertexHeader.innerHTML = `<span class="vertex-title">${paso}</span>`;
             currentGroup.appendChild(vertexHeader);
             groupContainer.appendChild(currentGroup);
         }
@@ -538,7 +538,7 @@ function crearResumen(datos) {
     if (datos.status === 'infeasible') {
         html += `
             <div class="summary-item">
-                <strong style="color: #e74c3c;">❌ Problema No Factible</strong>
+                <strong style="color: #e74c3c;">ERROR: Problema No Factible</strong>
                 <p>No existe ningún punto que cumpla todas las restricciones.</p>
             </div>
         `;
@@ -551,21 +551,21 @@ function crearResumen(datos) {
         
         html += `
             <div class="summary-item">
-                <strong>📊 Función Objetivo:</strong>
+                <strong>Función Objetivo:</strong>
                 <span>${objetivo ? objetivo.replace("FUNCIÓN OBJETIVO: ", "") : "N/A"}</span>
             </div>
             <div class="summary-item">
-                <strong>📍 Vértices Encontrados:</strong>
+                <strong>Vértices Encontrados:</strong>
                 <span>${numVertices} vértices factibles</span>
             </div>
             <div class="summary-item">
-                <strong>🎯 Solución:</strong>
+                <strong>Solución:</strong>
                 <span style="color: ${tipoSol.includes("Múltiple") ? "#d35400" : "#27ae60"}; font-weight: bold;">
                     ${tipoSol} - Z = ${mejorZ.toFixed(2)}
                 </span>
             </div>
             <div class="summary-item">
-                <strong>✅ Vértices Óptimos:</strong>
+                <strong>Vértices Óptimos:</strong>
                 <span>${datos.puntos_ganadores.map(p => `(${p[0].toFixed(2)}, ${p[1].toFixed(2)})`).join(", ")}</span>
             </div>
         `;
@@ -1425,31 +1425,31 @@ function crearResumenSimplex(datos) {
     if (datos.status === 'infeasible') {
         html += `
             <div class="summary-item">
-                <strong style="color: #e74c3c;">❌ Problema No Factible</strong>
+                <strong style="color: #e74c3c;">ERROR: Problema No Factible</strong>
                 <p>${datos.explicacion}</p>
             </div>
         `;
     } else if (datos.status === 'unbounded') {
         html += `
             <div class="summary-item">
-                <strong style="color: #e67e22;">⚠ Problema No Acotado</strong>
+                <strong style="color: #e67e22;">ADVERTENCIA: Problema No Acotado</strong>
                 <p>${datos.explicacion}</p>
             </div>
         `;
     } else {
         html += `
             <div class="summary-item">
-                <strong>📊 Iteraciones:</strong>
+                <strong>Iteraciones:</strong>
                 <span>${datos.iteraciones} iteraciones realizadas</span>
             </div>
             <div class="summary-item">
-                <strong>🎯 Solución:</strong>
+                <strong>Solución:</strong>
                 <span style="color: #27ae60; font-weight: bold;">
                     Z = ${datos.z_optimo.toFixed(4)}
                 </span>
             </div>
             <div class="summary-item">
-                <strong>✅ Variables:</strong>
+                <strong>Variables:</strong>
                 <span>${datos.solucion.map((val, idx) => `x${idx+1} = ${val.toFixed(4)}`).join(', ')}</span>
             </div>
         `;
@@ -1476,7 +1476,7 @@ function mostrarTablasSimplex(datos) {
     const explicacionGeneral = document.createElement('div');
     explicacionGeneral.className = 'table-info-general';
     explicacionGeneral.innerHTML = `
-        <strong>💡 Explicación de las Tablas del Simplex:</strong>
+        <strong>Explicación de las Tablas del Simplex:</strong>
         <ul style="margin: 10px 0 0 20px; padding: 0;">
             <li><strong>Variables Básicas:</strong> Variables que están en la solución actual (tienen valor distinto de cero).</li>
             <li><strong>Fila Z:</strong> Muestra los coeficientes reducidos. Valores negativos (max) o positivos (min) indican que se puede mejorar la solución.</li>
@@ -1523,7 +1523,7 @@ function mostrarTablasSimplex(datos) {
                 : `Fila ${tablaInfo.fila_saliente + 1}`;
             
             infoDiv.innerHTML = `
-                <strong>🔄 Operación de Pivoteo:</strong><br>
+                <strong>Operación de Pivoteo:</strong><br>
                 • <strong>Variable Entrante:</strong> ${varEntrante} (mejora la solución)<br>
                 • <strong>Variable Saliente:</strong> ${varSaliente} (sale de la base)<br>
                 ${tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null ? `• <strong>Elemento Pivote:</strong> ${tablaInfo.elemento_pivote.toFixed(4)}` : ''}
@@ -1535,7 +1535,7 @@ function mostrarTablasSimplex(datos) {
         if (tablaInfo.ratios && tablaInfo.ratios.length > 0) {
             const ratiosDiv = document.createElement('div');
             ratiosDiv.className = 'table-info-ratios';
-            let ratiosHtml = '<strong>📊 Ratios (Solución ÷ Variable Entrante):</strong><br>';
+            let ratiosHtml = '<strong>Ratios (Solución ÷ Variable Entrante):</strong><br>';
             tablaInfo.ratios.forEach((ratio, idx) => {
                 const varBasica = tablaInfo.variables_basicas && tablaInfo.variables_basicas[idx] 
                     ? tablaInfo.variables_basicas[idx] 
@@ -2292,7 +2292,7 @@ async function convertirRestriccionesNaturalesDosFases() {
         
         const mensaje = document.createElement('div');
         mensaje.style.cssText = 'margin-top: 10px; padding: 10px; background: #d4edda; color: #155724; border-radius: 4px;';
-        mensaje.textContent = `✓ ${datos.restricciones.length} restricción(es) convertida(s) exitosamente.`;
+        mensaje.textContent = `${datos.restricciones.length} restricción(es) convertida(s) exitosamente.`;
         container.parentElement.insertBefore(mensaje, container.nextSibling);
         
         setTimeout(() => {
@@ -2510,14 +2510,14 @@ function crearResumenDosFases(datos) {
     if (datos.status === 'infeasible') {
         html += `
             <div class="summary-item">
-                <strong style="color: #e74c3c;">❌ Problema No Factible</strong>
+                <strong style="color: #e74c3c;">ERROR: Problema No Factible</strong>
                 <p>${datos.explicacion}</p>
             </div>
         `;
     } else if (datos.status === 'unbounded') {
         html += `
             <div class="summary-item">
-                <strong style="color: #e67e22;">⚠ Problema No Acotado</strong>
+                <strong style="color: #e67e22;">ADVERTENCIA: Problema No Acotado</strong>
                 <p>${datos.explicacion}</p>
             </div>
         `;
@@ -2525,17 +2525,17 @@ function crearResumenDosFases(datos) {
         const iteraciones = datos.iteraciones || 0;
         html += `
             <div class="summary-item">
-                <strong>📊 Iteraciones:</strong>
+                <strong>Iteraciones:</strong>
                 <span>${iteraciones} iteraciones realizadas</span>
             </div>
             <div class="summary-item">
-                <strong>🎯 Solución:</strong>
+                <strong>Solución:</strong>
                 <span style="color: #27ae60; font-weight: bold;">
                     Z = ${datos.z_optimo.toFixed(4)}
                 </span>
             </div>
             <div class="summary-item">
-                <strong>✅ Variables:</strong>
+                <strong>Variables:</strong>
                 <span>${datos.solucion.map((val, idx) => `x${idx+1} = ${val.toFixed(4)}`).join(', ')}</span>
             </div>
         `;
@@ -2629,7 +2629,7 @@ function crearTablaHTML(tablaInfo) {
             : `Fila ${tablaInfo.fila_saliente + 1}`;
         
         infoDiv.innerHTML = `
-            <strong>🔄 Operación de Pivoteo:</strong><br>
+            <strong>Operación de Pivoteo:</strong><br>
             • <strong>Variable Entrante:</strong> ${varEntrante}<br>
             • <strong>Variable Saliente:</strong> ${varSaliente}<br>
             ${tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null ? `• <strong>Elemento Pivote:</strong> ${tablaInfo.elemento_pivote.toFixed(4)}` : ''}
@@ -2641,7 +2641,7 @@ function crearTablaHTML(tablaInfo) {
     if (tablaInfo.ratios && tablaInfo.ratios.length > 0) {
         const ratiosDiv = document.createElement('div');
         ratiosDiv.className = 'table-info-ratios';
-        let ratiosHtml = '<strong>📊 Ratios:</strong><br>';
+        let ratiosHtml = '<strong>Ratios:</strong><br>';
         tablaInfo.ratios.forEach((ratio, idx) => {
             const varBasica = tablaInfo.variables_basicas && tablaInfo.variables_basicas[idx] 
                 ? tablaInfo.variables_basicas[idx] 
