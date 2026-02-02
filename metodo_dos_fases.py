@@ -176,15 +176,18 @@ class MetodoDosFases:
         col_actual = num_vars
         for i in range(num_rest):
             if self.operadores[i] == '<=':
-                variables_basicas.append(f"s{len([v for v in variables_basicas if v.startswith('s')]) + 1}")
+                var_name = f"s{len([v for v in variables_basicas if v.startswith('s')]) + 1}"
+                variables_basicas.append(var_name)
                 indices_basicas.append(col_actual)
                 col_actual += 1
             elif self.operadores[i] == '>=':
-                variables_basicas.append(f"a{len([v for v in variables_basicas if v.startswith('a')]) + 1}")
+                var_name = f"a{len([v for v in variables_basicas if v.startswith('a')]) + 1}"
+                variables_basicas.append(var_name)
                 indices_basicas.append(col_actual + 1)
                 col_actual += 2
             elif self.operadores[i] == '=':
-                variables_basicas.append(f"a{len([v for v in variables_basicas if v.startswith('a')]) + 1}")
+                var_name = f"a{len([v for v in variables_basicas if v.startswith('a')]) + 1}"
+                variables_basicas.append(var_name)
                 indices_basicas.append(col_actual)
                 col_actual += 1
         
@@ -199,30 +202,37 @@ class MetodoDosFases:
         for idx_art in indices_artificiales:
             tabla[0, idx_art] = -1
         
-        # Calcular W inicial
-        w_val = sum(self.b[i] for i, idx_basica in enumerate(indices_basicas) 
-                    if idx_basica in indices_artificiales)
-        tabla[0, -1] = w_val
-        
         # Actualizar fila W para que coeficientes de básicas sean 0
+        # El RHS se calculará automáticamente durante este proceso
         for i, idx_basica in enumerate(indices_basicas):
             if abs(tabla[0, idx_basica]) > 1e-9:
                 factor = tabla[0, idx_basica]
                 tabla[0, :] -= factor * tabla[i + 1, :]
         
-        # Generar nombres de columnas
+        # Generar nombres de columnas en el mismo orden que se construyó A_estandar
         nombres_columnas = []
         for i in range(num_vars):
             nombres_columnas.append(f"x{i+1}")
-        for i in range(num_holgura):
-            nombres_columnas.append(f"s{i+1}")
-        for i in range(num_exceso):
-            nombres_columnas.append(f"e{i+1}")
-        for i in range(num_artificiales):
-            nombres_columnas.append(f"a{i+1}")
+        
+        # Agregar nombres de variables auxiliares en el orden que se crearon
+        idx_holgura = 1
+        idx_exceso = 1
+        idx_artificial = 1
+        for i in range(num_rest):
+            if self.operadores[i] == '<=':
+                nombres_columnas.append(f"s{idx_holgura}")
+                idx_holgura += 1
+            elif self.operadores[i] == '>=':
+                nombres_columnas.append(f"e{idx_exceso}")
+                idx_exceso += 1
+                nombres_columnas.append(f"a{idx_artificial}")
+                idx_artificial += 1
+            elif self.operadores[i] == '=':
+                nombres_columnas.append(f"a{idx_artificial}")
+                idx_artificial += 1
         
         self.registrar_paso("\nTABLA INICIAL DE FASE 1:")
-        self.registrar_tabla(tabla, 0, variables_basicas, "Tabla inicial Fase 1 (minimizar W)", 
+        self.registrar_tabla(tabla.copy(), 0, variables_basicas.copy(), "Tabla inicial Fase 1 (minimizar W)", 
                            nombres_columnas=nombres_columnas, fase=1)
         
         # Iteraciones de Simplex para Fase 1 (minimización)
@@ -243,16 +253,9 @@ class MetodoDosFases:
             
             col_entrante = int(indices_positivos[np.argmax(fila_w[indices_positivos])])
             
-            # Nombre de variable entrante
-            if col_entrante < num_vars:
-                var_entrante_nombre = f"x{col_entrante + 1}"
-            elif col_entrante < num_vars + num_holgura:
-                var_entrante_nombre = f"s{col_entrante - num_vars + 1}"
-            elif col_entrante < num_vars + num_holgura + num_exceso:
-                var_entrante_nombre = f"e{col_entrante - num_vars - num_holgura + 1}"
-            else:
-                var_entrante_nombre = f"a{col_entrante - num_vars - num_holgura - num_exceso + 1}"
-            
+            # Nombre de variable entrante (usar nombres_columnas ya calculado)
+            var_entrante_nombre = nombres_columnas[col_entrante]
+
             self.registrar_paso(f"📌 VARIABLE ENTRANTE: {var_entrante_nombre}")
             
             # Calcular ratios
@@ -369,19 +372,30 @@ class MetodoDosFases:
                     factor = tabla[0, idx_basica]
                     tabla[0, :] -= factor * tabla[i + 1, :]
         
-        # Generar nombres de columnas
+        # Generar nombres de columnas en el mismo orden que se construyó A_estandar
         nombres_columnas = []
         for i in range(num_vars):
             nombres_columnas.append(f"x{i+1}")
-        for i in range(num_holgura):
-            nombres_columnas.append(f"s{i+1}")
-        for i in range(num_exceso):
-            nombres_columnas.append(f"e{i+1}")
-        for i in range(num_artificiales):
-            nombres_columnas.append(f"a{i+1}")
         
+        # Agregar nombres de variables auxiliares en el orden que se crearon
+        idx_holgura = 1
+        idx_exceso = 1
+        idx_artificial = 1
+        for i in range(num_rest):
+            if self.operadores[i] == '<=':
+                nombres_columnas.append(f"s{idx_holgura}")
+                idx_holgura += 1
+            elif self.operadores[i] == '>=':
+                nombres_columnas.append(f"e{idx_exceso}")
+                idx_exceso += 1
+                nombres_columnas.append(f"a{idx_artificial}")
+                idx_artificial += 1
+            elif self.operadores[i] == '=':
+                nombres_columnas.append(f"a{idx_artificial}")
+                idx_artificial += 1
+
         self.registrar_paso("\nTABLA INICIAL DE FASE 2:")
-        self.registrar_tabla(tabla, 0, variables_basicas, "Tabla inicial Fase 2 (optimizar Z)", 
+        self.registrar_tabla(tabla.copy(), 0, variables_basicas.copy(), "Tabla inicial Fase 2 (optimizar Z)", 
                            nombres_columnas=nombres_columnas, fase=2)
         
         # Iteraciones de Simplex para Fase 2
@@ -407,15 +421,8 @@ class MetodoDosFases:
                     break
                 col_entrante = int(indices_positivos[np.argmax(fila_z[indices_positivos])])
             
-            # Nombre variable entrante
-            if col_entrante < num_vars:
-                var_entrante_nombre = f"x{col_entrante + 1}"
-            elif col_entrante < num_vars + num_holgura:
-                var_entrante_nombre = f"s{col_entrante - num_vars + 1}"
-            elif col_entrante < num_vars + num_holgura + num_exceso:
-                var_entrante_nombre = f"e{col_entrante - num_vars - num_holgura + 1}"
-            else:
-                var_entrante_nombre = f"a{col_entrante - num_vars - num_holgura - num_exceso + 1}"
+            # Nombre variable entrante (usar nombres_columnas ya calculado)
+            var_entrante_nombre = nombres_columnas[col_entrante]
             
             self.registrar_paso(f"📌 VARIABLE ENTRANTE: {var_entrante_nombre}")
             

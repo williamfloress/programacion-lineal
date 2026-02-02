@@ -1,4 +1,4 @@
-# 📋 Checkpoints: Mejoras de UX/UI y Funcionalidad
+# Checkpoints: Mejoras de UX/UI y Funcionalidad
 
 Este documento contiene los checkpoints paso a paso para mejorar la aplicación de Programación Lineal.
 
@@ -6,7 +6,7 @@ Este documento contiene los checkpoints paso a paso para mejorar la aplicación 
 
 ## 🎨 Mejoras de UX/UI
 
-### Checkpoint 1: Implementar Dark Mode ✅
+### Checkpoint 1: Implementar Dark Mode
 
 - [x] **Analizar la estructura actual de CSS**
   - [x] Revisar `static/css/style.css` para entender el sistema de colores actual
@@ -46,7 +46,7 @@ Este documento contiene los checkpoints paso a paso para mejorar la aplicación 
 
 ---
 
-### Checkpoint 2: Mantener Responsividad (Mobile-First) ✅
+### Checkpoint 2: Mantener Responsividad (Mobile-First)
 
 - [x] **Revisar diseño actual en móviles**
   - [x] Probar en diferentes tamaños de viewport (320px, 375px, 414px, etc.)
@@ -226,7 +226,7 @@ Este documento contiene los checkpoints paso a paso para mejorar la aplicación 
 
 ---
 
-## ✅ Validaciones Adicionales
+## Validaciones Adicionales
 
 ### Checkpoint 6: Mejorar Validaciones del Sistema
 

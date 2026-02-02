@@ -43,15 +43,18 @@ def convertir_restricciones_relacionales(restricciones_str):
     for restriccion in restricciones_str:
         restriccion = restriccion.strip().replace(" ", "")
         
+        # Convertir a minúsculas para aceptar X/Y y x/y
+        restriccion_lower = restriccion.lower()
+        
         # Detectar operador
-        if ">=" in restriccion:
-            partes = restriccion.split(">=")
+        if ">=" in restriccion_lower:
+            partes = restriccion_lower.split(">=")
             op = ">="
-        elif "<=" in restriccion:
-            partes = restriccion.split("<=")
+        elif "<=" in restriccion_lower:
+            partes = restriccion_lower.split("<=")
             op = "<="
-        elif "=" in restriccion:
-            partes = restriccion.split("=")
+        elif "=" in restriccion_lower:
+            partes = restriccion_lower.split("=")
             op = "="
         else:
             raise ValueError(f"No se pudo detectar el operador en: {restriccion}")
@@ -344,8 +347,22 @@ class MetodoGrafico:
                 "pasos": self.pasos
             }
 
-        # Eliminamos duplicados
-        self.vertices = np.unique(np.array(validos), axis=0)
+        # Eliminamos duplicados con tolerancia numérica
+        vertices_array = np.array(validos)
+        vertices_unicos = []
+        tolerancia = 1e-9
+        
+        for vertice in vertices_array:
+            es_duplicado = False
+            for v_unico in vertices_unicos:
+                # Comparar con tolerancia para evitar duplicados por errores de redondeo
+                if np.allclose(vertice, v_unico, atol=tolerancia):
+                    es_duplicado = True
+                    break
+            if not es_duplicado:
+                vertices_unicos.append(vertice)
+        
+        self.vertices = np.array(vertices_unicos)
         
         # 3. Optimizar y Analizar Tipo de Solución
         self.registrar_paso("EVALUACIÓN DE VÉRTICES EN LA FUNCIÓN OBJETIVO:")

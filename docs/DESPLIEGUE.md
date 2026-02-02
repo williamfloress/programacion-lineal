@@ -4,7 +4,7 @@ Este documento describe las diferentes opciones para desplegar la aplicación we
 
 ---
 
-## ⚠️ IMPORTANTE: Gunicorn y Windows
+## IMPORTANTE: Gunicorn y Windows
 
 > **🔴 Gunicorn NO funciona en Windows** - Esto es completamente normal y esperado. Gunicorn requiere módulos Unix (`fcntl`) que no existen en Windows.
 
@@ -32,7 +32,7 @@ Este documento describe las diferentes opciones para desplegar la aplicación we
 
 ---
 
-## 📋 Índice
+## Índice
 
 1. [Preparación del Proyecto](#preparación-del-proyecto)
 2. [Opciones de Hosting](#opciones-de-hosting)
@@ -755,7 +755,7 @@ Talisman(app, force_https=True)
 
 ---
 
-## ⚠️ Checklist Pre-Despliegue
+## Checklist Pre-Despliegue
 
 - [ ] ✅ Crear `requirements.txt`
 - [ ] ✅ Crear `Procfile` (si es necesario)

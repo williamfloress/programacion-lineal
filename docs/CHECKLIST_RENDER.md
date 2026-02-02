@@ -1,10 +1,10 @@
-# ✅ Checklist: Despliegue en Render - Paso a Paso
+# Checklist: Despliegue en Render - Paso a Paso
 
 Este checklist te guiará paso a paso para desplegar tu aplicación de Programación Lineal en Render.
 
 ---
 
-## 📋 Preparación Local
+## Preparación Local
 
 ### Paso 1: Verificar archivos necesarios
 
@@ -146,7 +146,7 @@ Este checklist te guiará paso a paso para desplegar tu aplicación de Programac
 
 ---
 
-## 🚀 Configurar Render
+## Configurar Render
 
 ### Paso 7: Crear cuenta en Render
 
@@ -398,7 +398,7 @@ git push origin main
 
 ---
 
-## ✅ Resumen Final
+## Resumen Final
 
 **Archivos necesarios:**
 - ✅ `requirements.txt`
