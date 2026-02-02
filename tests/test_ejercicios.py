@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Script de pruebas automáticas para la Calculadora de Programación Lineal.
-Prueba todos los ejercicios del archivo docs/EJERCICIOS_PRUEBA.md
+Prueba todos los ejercicios del archivo EJERCICIOS_PRUEBA.md
 """
 
 import sys
@@ -12,6 +12,9 @@ import json
 import re
 from typing import Dict, List, Any, Optional
 from colorama import init, Fore, Style
+
+# Obtener directorio del script para rutas relativas
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Configurar encoding UTF-8 para Windows
 if sys.platform == 'win32':
@@ -43,7 +46,7 @@ class TestResultado:
 
 
 class EjercicioParser:
-    """Parsea el archivo docs/EJERCICIOS_PRUEBA.md"""
+    """Parsea el archivo EJERCICIOS_PRUEBA.md"""
     
     @staticmethod
     def extraer_ejercicios(ruta_archivo: str) -> List[Dict[str, Any]]:
@@ -605,8 +608,9 @@ def main():
         return
     
     # Parsear ejercicios
-    print(f"{Fore.CYAN}Parseando ejercicios de docs/EJERCICIOS_PRUEBA.md...{Style.RESET_ALL}")
-    ejercicios = EjercicioParser.extraer_ejercicios('docs/EJERCICIOS_PRUEBA.md')
+    archivo_ejercicios = os.path.join(SCRIPT_DIR, 'EJERCICIOS_PRUEBA.md')
+    print(f"{Fore.CYAN}Parseando ejercicios de {archivo_ejercicios}...{Style.RESET_ALL}")
+    ejercicios = EjercicioParser.extraer_ejercicios(archivo_ejercicios)
     print(f"{Fore.GREEN}✓ {len(ejercicios)} ejercicios encontrados{Style.RESET_ALL}\n")
     
     # Ejecutar pruebas
