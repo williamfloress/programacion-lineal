@@ -6,20 +6,20 @@ Este documento describe las diferentes opciones para desplegar la aplicación we
 
 ## IMPORTANTE: Gunicorn y Windows
 
-> **🔴 Gunicorn NO funciona en Windows** - Esto es completamente normal y esperado. Gunicorn requiere módulos Unix (`fcntl`) que no existen en Windows.
+> **IMPORTANTE: Gunicorn NO funciona en Windows** - Esto es completamente normal y esperado. Gunicorn requiere módulos Unix (`fcntl`) que no existen en Windows.
 
 **¿Por qué entonces todas las instrucciones mencionan Gunicorn?**
 
-✅ **Porque Gunicorn se ejecuta en los servidores remotos (Linux), NO en tu Windows local**
+[X] **Porque Gunicorn se ejecuta en los servidores remotos (Linux), NO en tu Windows local**
 
-- 🖥️ **En tu Windows:** Usas el servidor de desarrollo de Flask (`python app.py`) para probar
-- 🚀 **En producción (servidores Linux):** Las plataformas de hosting ejecutan Gunicorn automáticamente
+- **En tu Windows:** Usas el servidor de desarrollo de Flask (`python app.py`) para probar
+- **En producción (servidores Linux):** Las plataformas de hosting ejecutan Gunicorn automáticamente
 
 **Esto significa:**
-- ✅ Incluye `gunicorn` en `requirements.txt` - Se instalará en el servidor Linux
-- ✅ Configura el `Procfile` con Gunicorn - Se usará en el servidor Linux  
-- ✅ NO intentes ejecutar Gunicorn en Windows - No funcionará
-- ✅ Prueba localmente con `python app.py` - Funciona perfecto en Windows
+- [X] Incluye `gunicorn` en `requirements.txt` - Se instalará en el servidor Linux
+- [X] Configura el `Procfile` con Gunicorn - Se usará en el servidor Linux  
+- [X] NO intentes ejecutar Gunicorn en Windows - No funcionará
+- [X] Prueba localmente con `python app.py` - Funciona perfecto en Windows
 
 **Ejemplo del flujo:**
 1. Desarrollas en Windows → `python app.py` (servidor Flask dev)
@@ -28,7 +28,7 @@ Este documento describe las diferentes opciones para desplegar la aplicación we
 4. Servidor Linux ejecuta → `gunicorn app:app` (en servidor remoto)
 5. Tu app está en línea → Funcionando con Gunicorn en Linux
 
-> **✅ Compatibilidad con Windows:** Todas las opciones de hosting funcionan perfectamente desde Windows. El despliegue es remoto y Gunicorn se ejecuta automáticamente en sus servidores Linux.
+> **Compatibilidad con Windows:** Todas las opciones de hosting funcionan perfectamente desde Windows. El despliegue es remoto y Gunicorn se ejecuta automáticamente en sus servidores Linux.
 
 ---
 
@@ -50,11 +50,11 @@ Este documento describe las diferentes opciones para desplegar la aplicación we
 
 ---
 
-## 🔧 Preparación del Proyecto
+## Preparación del Proyecto
 
 Antes de desplegar, necesitamos preparar el proyecto para producción:
 
-> **💡 Para Windows:** Los archivos de configuración (`requirements.txt`, `Procfile`) se usarán en el servidor Linux remoto. NO necesitas ejecutar Gunicorn en Windows. Prueba localmente con `python app.py`.
+> **Para Windows:** Los archivos de configuración (`requirements.txt`, `Procfile`) se usarán en el servidor Linux remoto. NO necesitas ejecutar Gunicorn en Windows. Prueba localmente con `python app.py`.
 
 ### 1. Crear archivo `requirements.txt`
 
@@ -66,7 +66,7 @@ numpy>=1.21.0
 gunicorn>=20.1.0
 ```
 
-> **📝 Nota Windows:** Incluye `gunicorn` aquí porque se instalará en el servidor Linux remoto. En Windows, no intentes instalar ni ejecutar Gunicorn - no funcionará. Para pruebas locales en Windows, usa solo Flask: `pip install Flask numpy` (sin gunicorn).
+> **Nota Windows:** Incluye `gunicorn` aquí porque se instalará en el servidor Linux remoto. En Windows, no intentes instalar ni ejecutar Gunicorn - no funcionará. Para pruebas locales en Windows, usa solo Flask: `pip install Flask numpy` (sin gunicorn).
 
 ### 2. Modificar `app.py` para producción
 
@@ -97,7 +97,7 @@ PORT=5000
 web: gunicorn app:app --bind 0.0.0.0:$PORT
 ```
 
-> **📝 Nota Windows:** Este `Procfile` se ejecutará automáticamente en el servidor Linux de la plataforma de hosting. NO lo ejecutes en Windows (no funcionará). En Windows, prueba con `python app.py`.
+> **Nota Windows:** Este `Procfile` se ejecutará automáticamente en el servidor Linux de la plataforma de hosting. NO lo ejecutes en Windows (no funcionará). En Windows, prueba con `python app.py`.
 
 ### 5. Crear `runtime.txt` (opcional, para especificar versión de Python)
 
@@ -123,27 +123,27 @@ flask run
 
 Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu aplicación.
 
-> **⚠️ Importante:** Esta es solo para desarrollo local. En producción, las plataformas de hosting usarán Gunicorn automáticamente en sus servidores Linux.
+> **Importante:** Esta es solo para desarrollo local. En producción, las plataformas de hosting usarán Gunicorn automáticamente en sus servidores Linux.
 
 ---
 
-## 🌐 Opciones de Hosting
+## Opciones de Hosting
 
 ### Solución 1: Render (Recomendado para inicio rápido)
 
-> **✅ Funciona perfectamente desde Windows:** Solo necesitas Git y un navegador web.
+> **Funciona perfectamente desde Windows:** Solo necesitas Git y un navegador web.
 
 **Ventajas:**
-- ✅ Gratis con plan básico
-- ✅ HTTPS automático
-- ✅ Despliegue automático desde Git
-- ✅ Muy fácil de configurar
-- ✅ Logs integrados
-- ✅ 100% compatible con Windows (no requiere comandos locales)
+- [X] Gratis con plan básico
+- [X] HTTPS automático
+- [X] Despliegue automático desde Git
+- [X] Muy fácil de configurar
+- [X] Logs integrados
+- [X] 100% compatible con Windows (no requiere comandos locales)
 
 **Desventajas:**
-- ⚠️ El servicio gratuito se "duerme" después de inactividad
-- ⚠️ Límites de recursos en plan gratuito
+- El servicio gratuito se "duerme" después de inactividad
+- Límites de recursos en plan gratuito
 
 **Pasos para desplegar:**
 
@@ -154,7 +154,7 @@ Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu ap
      ```
      web: gunicorn app:app --bind 0.0.0.0:$PORT
      ```
-     > **📝 Windows:** Este comando se ejecutará en el servidor Linux de Render, NO en tu Windows.
+     > **Windows:** Este comando se ejecutará en el servidor Linux de Render, NO en tu Windows.
 
 2. **En Render:**
    - Ve a https://render.com
@@ -163,12 +163,12 @@ Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu ap
    - Configuración:
      - **Build Command:** `pip install -r requirements.txt`
      - **Start Command:** `gunicorn app:app --bind 0.0.0.0:$PORT`
-       > **📝 Windows:** Este comando se ejecuta automáticamente en el servidor Linux de Render.
+       > **Windows:** Este comando se ejecuta automáticamente en el servidor Linux de Render.
      - **Environment:** Python 3
      - **Port:** $PORT (variable automática)
    - Click "Create Web Service"
    
-   > **💡 Para Windows:** No necesitas ejecutar estos comandos localmente. Render los ejecutará automáticamente en su servidor Linux cuando despliegues.
+   > **Para Windows:** No necesitas ejecutar estos comandos localmente. Render los ejecutará automáticamente en su servidor Linux cuando despliegues.
 
 3. **Configurar variables de entorno (opcional):**
    - `FLASK_ENV=production`
@@ -180,18 +180,18 @@ Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu ap
 
 ### Solución 2: Railway
 
-> **✅ Funciona perfectamente desde Windows:** Solo necesitas Git y un navegador web.
+> **Funciona perfectamente desde Windows:** Solo necesitas Git y un navegador web.
 
 **Ventajas:**
-- ✅ Muy fácil de usar
-- ✅ Despliegue automático desde Git
-- ✅ HTTPS automático
-- ✅ $5 de crédito gratuito mensual
-- ✅ 100% compatible con Windows (no requiere comandos locales)
+- [X] Muy fácil de usar
+- [X] Despliegue automático desde Git
+- [X] HTTPS automático
+- [X] $5 de crédito gratuito mensual
+- [X] 100% compatible con Windows (no requiere comandos locales)
 
 **Desventajas:**
-- ⚠️ Menos documentación que otras opciones
-- ⚠️ Precios pueden aumentar con uso
+- Menos documentación que otras opciones
+- Precios pueden aumentar con uso
 
 **Pasos para desplegar:**
 
@@ -201,7 +201,7 @@ Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu ap
      ```
      web: gunicorn app:app --bind 0.0.0.0:$PORT
      ```
-     > **📝 Windows:** Este comando se ejecutará en el servidor Linux de Railway, NO en tu Windows.
+     > **Windows:** Este comando se ejecutará en el servidor Linux de Railway, NO en tu Windows.
 
 2. **En Railway:**
    - Ve a https://railway.app
@@ -212,7 +212,7 @@ Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu ap
    - Configura variables de entorno si es necesario
    - Railway asignará automáticamente un dominio
    
-   > **💡 Para Windows:** No necesitas ejecutar Gunicorn localmente. Railway lo ejecutará automáticamente en su servidor Linux.
+   > **Para Windows:** No necesitas ejecutar Gunicorn localmente. Railway lo ejecutará automáticamente en su servidor Linux.
 
 **Costo:** $5 crédito gratuito/mes | Pagas por uso después
 
@@ -220,17 +220,17 @@ Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu ap
 
 ### Solución 3: Heroku
 
-> **✅ Funciona perfectamente desde Windows:** Puedes usar Heroku CLI desde Windows PowerShell o hacerlo todo desde Git.
+> **Funciona perfectamente desde Windows:** Puedes usar Heroku CLI desde Windows PowerShell o hacerlo todo desde Git.
 
 **Ventajas:**
-- ✅ Muy popular y documentado
-- ✅ Ecosistema grande de add-ons
-- ✅ Despliegue desde Git
-- ✅ Heroku CLI disponible para Windows
+- [X] Muy popular y documentado
+- [X] Ecosistema grande de add-ons
+- [X] Despliegue desde Git
+- [X] Heroku CLI disponible para Windows
 
 **Desventajas:**
-- ⚠️ Eliminaron el plan gratuito (ahora es de pago)
-- ⚠️ Más costoso que alternativas
+- Eliminaron el plan gratuito (ahora es de pago)
+- Más costoso que alternativas
 
 **Pasos para desplegar:**
 
@@ -250,7 +250,7 @@ Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu ap
      ```
      web: gunicorn app:app --bind 0.0.0.0:$PORT
      ```
-     > **📝 Windows:** Este comando se ejecutará en el servidor Linux de Heroku, NO en tu Windows.
+     > **Windows:** Este comando se ejecutará en el servidor Linux de Heroku, NO en tu Windows.
 
 3. **Desplegar (Windows PowerShell o Git Bash):**
    ```powershell
@@ -271,17 +271,17 @@ Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu ap
 
 ### Solución 4: DigitalOcean App Platform
 
-> **✅ Funciona perfectamente desde Windows:** Solo necesitas Git y un navegador web.
+> **Funciona perfectamente desde Windows:** Solo necesitas Git y un navegador web.
 
 **Ventajas:**
-- ✅ Despliegue automático desde Git
-- ✅ HTTPS automático
-- ✅ Buena relación precio/rendimiento
-- ✅ Escalable
-- ✅ 100% compatible con Windows (interfaz web completa)
+- [X] Despliegue automático desde Git
+- [X] HTTPS automático
+- [X] Buena relación precio/rendimiento
+- [X] Escalable
+- [X] 100% compatible con Windows (interfaz web completa)
 
 **Desventajas:**
-- ⚠️ Requiere tarjeta de crédito
+- Requiere tarjeta de crédito
 
 **Pasos para desplegar:**
 
@@ -302,7 +302,7 @@ Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu ap
        instance_size_slug: basic-xxs
        http_port: 8080
      ```
-     > **📝 Windows:** Este comando se ejecutará en el servidor Linux de DigitalOcean, NO en tu Windows.
+     > **Windows:** Este comando se ejecutará en el servidor Linux de DigitalOcean, NO en tu Windows.
 
 2. **En DigitalOcean:**
    - Ve a https://cloud.digitalocean.com/apps
@@ -318,17 +318,17 @@ Esto iniciará el servidor en `http://localhost:5000` donde podrás probar tu ap
 
 ### Solución 5: VPS (DigitalOcean Droplet, AWS EC2, Linode)
 
-> **⚠️ Requiere SSH desde Windows:** Esta opción requiere acceder a un servidor Linux vía SSH desde Windows. Puedes usar PowerShell (con OpenSSH), PuTTY, o WSL2.
+> **Requiere SSH desde Windows:** Esta opción requiere acceder a un servidor Linux vía SSH desde Windows. Puedes usar PowerShell (con OpenSSH), PuTTY, o WSL2.
 
 **Ventajas:**
-- ✅ Control total del servidor
-- ✅ Más económico a largo plazo
-- ✅ Flexible para configuraciones personalizadas
+- [X] Control total del servidor
+- [X] Más económico a largo plazo
+- [X] Flexible para configuraciones personalizadas
 
 **Desventajas:**
-- ⚠️ Requiere conocimiento de administración de servidores
-- ⚠️ Debes configurar todo manualmente
-- ⚠️ Necesitas acceder a un servidor Linux (no ejecuta en Windows directamente)
+- Requiere conocimiento de administración de servidores
+- Debes configurar todo manualmente
+- Necesitas acceder a un servidor Linux (no ejecuta en Windows directamente)
 
 **Nota para Windows:** Los comandos siguientes se ejecutan en el servidor Linux remoto, no en tu máquina Windows. Puedes acceder usando:
 - **PowerShell con OpenSSH** (incluido en Windows 10/11): `ssh usuario@servidor`
@@ -365,7 +365,7 @@ pip install gunicorn
 gunicorn app:app --bind 0.0.0.0:5000
 ```
 
-> **⚠️ Windows:** Estos comandos se ejecutan vía SSH en el servidor Linux remoto. NO intentes ejecutarlos directamente en Windows. Desde Windows, conéctate al servidor usando SSH y luego ejecuta estos comandos.
+> **Windows:** Estos comandos se ejecutan vía SSH en el servidor Linux remoto. NO intentes ejecutarlos directamente en Windows. Desde Windows, conéctate al servidor usando SSH y luego ejecuta estos comandos.
 
 #### 5.2 Configurar Gunicorn como servicio
 
@@ -429,18 +429,18 @@ sudo certbot --nginx -d tu-dominio.com -d www.tu-dominio.com
 
 ### Solución 6: AWS Elastic Beanstalk
 
-> **✅ Funciona perfectamente desde Windows:** EB CLI funciona en Windows PowerShell, CMD o Git Bash.
+> **Funciona perfectamente desde Windows:** EB CLI funciona en Windows PowerShell, CMD o Git Bash.
 
 **Ventajas:**
-- ✅ Integración con servicios AWS
-- ✅ Escalado automático
-- ✅ Monitoreo integrado
-- ✅ Muy escalable
-- ✅ EB CLI compatible con Windows
+- [X] Integración con servicios AWS
+- [X] Escalado automático
+- [X] Monitoreo integrado
+- [X] Muy escalable
+- [X] EB CLI compatible con Windows
 
 **Desventajas:**
-- ⚠️ Curva de aprendizaje de AWS
-- ⚠️ Puede ser costoso
+- Curva de aprendizaje de AWS
+- Puede ser costoso
 
 **Pasos para desplegar:**
 
@@ -472,18 +472,18 @@ sudo certbot --nginx -d tu-dominio.com -d www.tu-dominio.com
 
 ### Solución 7: Google Cloud Run
 
-> **✅ Funciona perfectamente desde Windows:** Google Cloud SDK está disponible para Windows.
+> **Funciona perfectamente desde Windows:** Google Cloud SDK está disponible para Windows.
 
 **Ventajas:**
-- ✅ Pago por uso (muy económico para tráfico bajo)
-- ✅ Escalado automático a cero
-- ✅ HTTPS automático
-- ✅ Despliegue con Docker
-- ✅ Google Cloud SDK compatible con Windows
+- [X] Pago por uso (muy económico para tráfico bajo)
+- [X] Escalado automático a cero
+- [X] HTTPS automático
+- [X] Despliegue con Docker
+- [X] Google Cloud SDK compatible con Windows
 
 **Desventajas:**
-- ⚠️ Requiere crear Dockerfile
-- ⚠️ Curva de aprendizaje
+- Requiere crear Dockerfile
+- Curva de aprendizaje
 
 **Pasos para desplegar:**
 
@@ -500,7 +500,7 @@ sudo certbot --nginx -d tu-dominio.com -d www.tu-dominio.com
 
    CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app:app
    ```
-   > **📝 Windows:** Este `CMD` se ejecutará dentro del contenedor Docker en el servidor Linux de Google Cloud. NO se ejecuta en tu Windows. Solo necesitas crear el archivo Dockerfile y subirlo.
+   > **Windows:** Este `CMD` se ejecutará dentro del contenedor Docker en el servidor Linux de Google Cloud. NO se ejecuta en tu Windows. Solo necesitas crear el archivo Dockerfile y subirlo.
 
 2. **Instalar Google Cloud SDK (Windows):**
    - Descargar instalador: https://cloud.google.com/sdk/docs/install
@@ -523,17 +523,17 @@ sudo certbot --nginx -d tu-dominio.com -d www.tu-dominio.com
 
 ### Solución 8: Microsoft Azure App Service
 
-> **✅ Funciona perfectamente desde Windows:** Azure CLI está optimizado para Windows.
+> **Funciona perfectamente desde Windows:** Azure CLI está optimizado para Windows.
 
 **Ventajas:**
-- ✅ Integración con servicios Azure
-- ✅ Escalado automático
-- ✅ HTTPS automático
-- ✅ Azure CLI nativo para Windows (MSI installer)
+- [X] Integración con servicios Azure
+- [X] Escalado automático
+- [X] HTTPS automático
+- [X] Azure CLI nativo para Windows (MSI installer)
 
 **Desventajas:**
-- ⚠️ Curva de aprendizaje
-- ⚠️ Puede ser costoso
+- Curva de aprendizaje
+- Puede ser costoso
 
 **Pasos para desplegar:**
 
@@ -557,7 +557,7 @@ sudo certbot --nginx -d tu-dominio.com -d www.tu-dominio.com
 
 ---
 
-## ⚙️ Configuración Avanzada
+## Configuración Avanzada
 
 ### Mejorar `app.py` para producción
 
@@ -594,7 +594,7 @@ if __name__ == '__main__':
 
 ### Configurar Gunicorn para mejor rendimiento
 
-> **⚠️ Windows:** Esta configuración es para el servidor Linux de producción. NO intentes ejecutar esto en Windows localmente.
+> **Windows:** Esta configuración es para el servidor Linux de producción. NO intentes ejecutar esto en Windows localmente.
 
 Crear archivo `gunicorn_config.py`:
 
@@ -617,11 +617,11 @@ Ejecutar en el servidor Linux (NO en Windows):
 gunicorn -c gunicorn_config.py app:app
 ```
 
-> **📝 Windows:** Este archivo de configuración se usará en el servidor Linux remoto. En Windows, no necesitas ejecutar este comando.
+> **Windows:** Este archivo de configuración se usará en el servidor Linux remoto. En Windows, no necesitas ejecutar este comando.
 
 ---
 
-## 📊 Monitoreo y Logging
+## Monitoreo y Logging
 
 ### Opción 1: Logging básico con Python
 
@@ -664,7 +664,7 @@ Servicios gratuitos:
 
 ---
 
-## 🔒 Consideraciones de Seguridad
+## Consideraciones de Seguridad
 
 ### 1. Variables de entorno
 
@@ -711,43 +711,43 @@ Talisman(app, force_https=True)
 
 ---
 
-## 📝 Comparación Rápida
+## Comparación Rápida
 
 | Plataforma | Facilidad | Costo | Escalabilidad | Recomendado para |
 |------------|-----------|-------|---------------|------------------|
-| **Render** | ⭐⭐⭐⭐⭐ | Gratis/$7+ | ⭐⭐⭐ | Inicio rápido |
-| **Railway** | ⭐⭐⭐⭐⭐ | $5 crédito/mes | ⭐⭐⭐⭐ | Proyectos pequeños |
-| **Heroku** | ⭐⭐⭐⭐ | $5+ | ⭐⭐⭐⭐ | Proyectos establecidos |
-| **DigitalOcean App** | ⭐⭐⭐⭐ | $5+ | ⭐⭐⭐⭐ | Aplicaciones medianas |
-| **VPS** | ⭐⭐ | $4+ | ⭐⭐⭐⭐⭐ | Control total |
-| **AWS Beanstalk** | ⭐⭐⭐ | $10+ | ⭐⭐⭐⭐⭐ | Empresas |
-| **Google Cloud Run** | ⭐⭐⭐ | $0.10/1M req | ⭐⭐⭐⭐⭐ | Tráfico variable |
-| **Azure App Service** | ⭐⭐⭐ | $0/$10+ | ⭐⭐⭐⭐ | Ecosistema Azure |
+| **Render** | 5/5 | Gratis/$7+ | 3/5 | Inicio rápido |
+| **Railway** | 5/5 | $5 crédito/mes | 4/5 | Proyectos pequeños |
+| **Heroku** | 4/5 | $5+ | 4/5 | Proyectos establecidos |
+| **DigitalOcean App** | 4/5 | $5+ | 4/5 | Aplicaciones medianas |
+| **VPS** | 2/5 | $4+ | 5/5 | Control total |
+| **AWS Beanstalk** | 3/5 | $10+ | 5/5 | Empresas |
+| **Google Cloud Run** | 3/5 | $0.10/1M req | 5/5 | Tráfico variable |
+| **Azure App Service** | 3/5 | $0/$10+ | 4/5 | Ecosistema Azure |
 
 ---
 
-## 🚀 Recomendación Inicial
+## Recomendación Inicial
 
 ### Para usuarios de Windows:
 
 **Para comenzar rápido (recomendado):**
-- ✅ **Render** - Solo navegador + Git (más fácil)
-- ✅ **Railway** - Solo navegador + Git (muy simple)
+- [X] **Render** - Solo navegador + Git (más fácil)
+- [X] **Railway** - Solo navegador + Git (muy simple)
 
 **Si necesitas más control:**
-- ✅ **Azure App Service** - Excelente integración con Windows
-- ✅ **DigitalOcean App Platform** - Interfaz web completa
+- [X] **Azure App Service** - Excelente integración con Windows
+- [X] **DigitalOcean App Platform** - Interfaz web completa
 
 **Para proyectos avanzados:**
-- ⚠️ **VPS** - Requiere SSH desde Windows (PowerShell/PuTTY/WSL2)
-- ✅ **Google Cloud Run** - Requiere Google Cloud SDK (disponible para Windows)
-- ✅ **AWS Elastic Beanstalk** - Requiere EB CLI (funciona en Windows)
+- **VPS** - Requiere SSH desde Windows (PowerShell/PuTTY/WSL2)
+- [X] **Google Cloud Run** - Requiere Google Cloud SDK (disponible para Windows)
+- [X] **AWS Elastic Beanstalk** - Requiere EB CLI (funciona en Windows)
 
-> **💡 Consejo:** Si estás empezando desde Windows, comienza con **Render** o **Railway**. Son las opciones más simples y no requieren instalar nada más que Git.
+> **Consejo:** Si estás empezando desde Windows, comienza con **Render** o **Railway**. Son las opciones más simples y no requieren instalar nada más que Git.
 
 ---
 
-## 📚 Recursos Adicionales
+## Recursos Adicionales
 
 - [Flask Deployment Guide](https://flask.palletsprojects.com/en/2.3.x/deploying/)
 - [Gunicorn Documentation](https://docs.gunicorn.org/)
@@ -757,18 +757,18 @@ Talisman(app, force_https=True)
 
 ## Checklist Pre-Despliegue
 
-- [ ] ✅ Crear `requirements.txt`
-- [ ] ✅ Crear `Procfile` (si es necesario)
-- [ ] ✅ Configurar variables de entorno
-- [ ] ✅ Desactivar modo debug en producción
-- [ ] ✅ Configurar logging
-- [ ] ✅ Probar aplicación localmente:
+- [X] Crear `requirements.txt`
+- [X] Crear `Procfile` (si es necesario)
+- [X] Configurar variables de entorno
+- [X] Desactivar modo debug en producción
+- [X] Configurar logging
+- [X] Probar aplicación localmente:
   - **Windows:** Usar `python app.py` (servidor Flask dev) - Gunicorn NO funciona en Windows
   - **Linux/macOS:** Puedes usar `python app.py` o `gunicorn app:app` para pruebas locales
-- [ ] ✅ Configurar dominio personalizado (opcional)
-- [ ] ✅ Configurar SSL/HTTPS
-- [ ] ✅ Configurar monitoreo
-- [ ] ✅ Configurar backups (si aplica)
+- [X] Configurar dominio personalizado (opcional)
+- [X] Configurar SSL/HTTPS
+- [X] Configurar monitoreo
+- [X] Configurar backups (si aplica)
 
 ---
 
@@ -776,46 +776,46 @@ Talisman(app, force_https=True)
 
 ---
 
-## 🔄 Resumen: Gunicorn y Windows - Lo que necesitas saber
+## Resumen: Gunicorn y Windows - Lo que necesitas saber
 
-### ✅ Lo que SÍ debes hacer (Windows):
+### Lo que SÍ debes hacer (Windows):
 
-1. **Incluir Gunicorn en `requirements.txt`** 
+1. **Incluir Gunicorn en `requirements.txt`** [X]
    - Se instalará automáticamente en el servidor Linux remoto
    - NO intentes instalarlo localmente en Windows
 
-2. **Crear `Procfile` con comando Gunicorn**
+2. **Crear `Procfile` con comando Gunicorn** [X]
    - Se ejecutará automáticamente en el servidor Linux remoto
    - NO intentes ejecutarlo localmente en Windows
 
-3. **Probar localmente con Flask dev server**
+3. **Probar localmente con Flask dev server** [X]
    ```powershell
    python app.py
    ```
 
-### ❌ Lo que NO debes hacer (Windows):
+### Lo que NO debes hacer (Windows):
 
 1. **NO intentes instalar Gunicorn en Windows** - No funcionará
 2. **NO intentes ejecutar `gunicorn` desde Windows** - Dará error
 3. **NO te preocupes** - Las plataformas de hosting ejecutan Gunicorn automáticamente en sus servidores Linux
 
-### 🎯 Flujo típico desde Windows:
+### Flujo típico desde Windows:
 
 ```
 1. Desarrollo local (Windows)
-   └─> python app.py (servidor Flask dev)
+   --> python app.py (servidor Flask dev)
    
 2. Git push a GitHub
-   └─> git add . && git commit && git push
+   --> git add . && git commit && git push
    
 3. Plataforma hosting detecta cambios
-   └─> Render/Railway/Heroku/etc. descarga código
+   --> Render/Railway/Heroku/etc. descarga código
    
 4. Servidor Linux ejecuta automáticamente
-   └─> pip install -r requirements.txt (incluye gunicorn)
-   └─> gunicorn app:app (en servidor Linux)
+   --> pip install -r requirements.txt (incluye gunicorn)
+   --> gunicorn app:app (en servidor Linux)
    
-5. Tu app está en línea ✅
+5. Tu app está en línea [X]
 ```
 
 **Todo funciona perfectamente desde Windows. Solo recuerda: Gunicorn corre en el servidor remoto, no en tu máquina.**

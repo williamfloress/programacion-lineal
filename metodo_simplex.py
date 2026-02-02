@@ -450,43 +450,44 @@ class MetodoSimplex:
                             "tablas": tablas_serializadas
                         }
         
-        # Clasifico la solución: única, múltiple (alguna no básica con coef. 0 en Z), o degenerada (alguna básica con valor 0)
+        # Clasifico la solución: única, múltiple, o degenerada
         fila_z_final = tabla[0, :num_cols_totales]
-        vars_no_basicas_cero = 0
         nombres_vars_nb_cero = []
+        existe_pivote_con_ratio_positivo = False  # ¿Podemos llegar a otro vértice con el mismo Z?
         
         for j in range(num_cols_totales):
-            # Excluir variables artificiales del análisis
             es_artificial = (j >= num_vars + num_holgura + num_exceso)
-            
-            if j not in indices_basicas and not es_artificial:  # Variable no básica (no artificial)
-                if abs(fila_z_final[j]) < 1e-9:  # Coeficiente aproximadamente cero
-                    vars_no_basicas_cero += 1
-                    # Determinar nombre para mostrar
-                    if j < num_vars:
-                        nombres_vars_nb_cero.append(f"x{j+1}")
-                    elif j < num_vars + num_holgura:
-                        nombres_vars_nb_cero.append(f"s{j - num_vars + 1}")
-                    else:
-                        nombres_vars_nb_cero.append(f"e{j - num_vars - num_holgura + 1}")
+            if j not in indices_basicas and not es_artificial and abs(fila_z_final[j]) < 1e-9:
+                if j < num_vars:
+                    nombres_vars_nb_cero.append(f"x{j+1}")
+                elif j < num_vars + num_holgura:
+                    nombres_vars_nb_cero.append(f"s{j - num_vars + 1}")
+                else:
+                    nombres_vars_nb_cero.append(f"e{j - num_vars - num_holgura + 1}")
+                # Si al pivotar j el ratio mínimo > 0 → hay otro vértice óptimo (solución múltiple)
+                ratios = []
+                for i in range(num_rest):
+                    if tabla[i + 1, j] > 1e-9:
+                        ratios.append(tabla[i + 1, -1] / tabla[i + 1, j])
+                if ratios and min(ratios) > 1e-9:
+                    existe_pivote_con_ratio_positivo = True
         
         # Verificar degeneración (variables básicas con valor cero)
         vars_basicas_cero = 0
         for i, idx_basica in enumerate(indices_basicas):
-            # Excluir artificiales
             es_artificial = (idx_basica >= num_vars + num_holgura + num_exceso)
             if not es_artificial:
                 fila_rest = i + 1
-                if abs(tabla[fila_rest, -1]) < 1e-9:  # Valor en solución ≈ 0
+                if abs(tabla[fila_rest, -1]) < 1e-9:
                     vars_basicas_cero += 1
         
-        # Determinar tipo de solución y explicación
-        if vars_no_basicas_cero > 0:
+        # Múltiple SOLO si existe pivote que lleve a otro vértice (ratio > 0)
+        if nombres_vars_nb_cero and existe_pivote_con_ratio_positivo:
             tipo_solucion = "Solución Múltiple (Infinitas Soluciones)"
-            explicacion = (f"Se encontró una solución óptima, pero existen {vars_no_basicas_cero} variable(s) no básica(s) "
+            explicacion = (f"Se encontró una solución óptima, pero existen variable(s) no básica(s) "
                          f"({', '.join(nombres_vars_nb_cero)}) con coeficiente cero en la fila Z. "
-                         f"Esto significa que estas variables pueden entrar a la base sin cambiar el valor de Z, "
-                         f"generando infinitas soluciones óptimas a lo largo de un borde de la región factible.")
+                         f"Esto permite alcanzar otro vértice óptimo sin cambiar Z, generando infinitas "
+                         f"soluciones óptimas a lo largo de un borde de la región factible.")
         elif vars_basicas_cero > 0:
             tipo_solucion = "Solución Única (Degenerada)"
             explicacion = (f"Se encontró una solución óptima única, pero hay {vars_basicas_cero} variable(s) básica(s) "

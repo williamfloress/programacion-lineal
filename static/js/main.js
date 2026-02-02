@@ -1459,8 +1459,46 @@ function crearResumenSimplex(datos) {
     summaryDiv.innerHTML = html;
 }
 
+// Modo de visualización de tablas: 'decimal' | 'fraction' (solo visual, no afecta cálculos)
+let displayModeTablas = 'fraction';
+let lastSimplexDatos = null;
+let lastDosFasesDatos = null;
+
+// Convierte un decimal a fracción para mostrar (solo visual)
+function decimalToFraction(val) {
+    if (val === 0) return '0';
+    const tol = 1e-9;
+    let den = 1;
+    while (den <= 10000) {
+        const num = Math.round(val * den);
+        if (Math.abs(num / den - val) < tol) {
+            if (den === 1) return String(num);
+            return `${num}/${den}`;
+        }
+        den++;
+    }
+    return val.toFixed(4);
+}
+
+function formatearNumeroTabla(val) {
+    if (displayModeTablas === 'fraction') return decimalToFraction(val);
+    return val.toFixed(4);
+}
+
+function cambiarModoDisplayTablas(mode, btn) {
+    displayModeTablas = mode;
+    document.querySelectorAll('.display-mode-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-mode') === mode);
+    });
+    const simplexVisible = document.getElementById('resultados-simplex').style.display !== 'none';
+    const dosFasesVisible = document.getElementById('resultados-dos-fases').style.display !== 'none';
+    if (simplexVisible && lastSimplexDatos) mostrarTablasSimplex(lastSimplexDatos);
+    if (dosFasesVisible && lastDosFasesDatos) mostrarTablasDosFases(lastDosFasesDatos);
+}
+
 // Mostrar tablas del Simplex
 function mostrarTablasSimplex(datos) {
+    lastSimplexDatos = datos;
     const container = document.getElementById('tablas-simplex-container');
     container.innerHTML = '';
     
@@ -1526,7 +1564,7 @@ function mostrarTablasSimplex(datos) {
                 <strong>Operación de Pivoteo:</strong><br>
                 • <strong>Variable Entrante:</strong> ${varEntrante} (mejora la solución)<br>
                 • <strong>Variable Saliente:</strong> ${varSaliente} (sale de la base)<br>
-                ${tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null ? `• <strong>Elemento Pivote:</strong> ${tablaInfo.elemento_pivote.toFixed(4)}` : ''}
+                ${tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null ? `• <strong>Elemento Pivote:</strong> ${formatearNumeroTabla(tablaInfo.elemento_pivote)}` : ''}
             `;
             tablaDiv.appendChild(infoDiv);
         }
@@ -1542,7 +1580,7 @@ function mostrarTablasSimplex(datos) {
                     : `Fila ${idx + 1}`;
                 // Manejar None (null en JSON) como infinito
                 const esInfinito = ratio === null || ratio === Infinity || ratio === undefined;
-                const ratioStr = esInfinito ? '∞' : ratio.toFixed(4);
+                const ratioStr = esInfinito ? '∞' : formatearNumeroTabla(ratio);
                 // Filtrar ratios finitos para encontrar el mínimo
                 const ratiosFinitos = tablaInfo.ratios.filter(r => r !== null && r !== Infinity && r !== undefined);
                 const esMinimo = !esInfinito && ratiosFinitos.length > 0 && ratio === Math.min(...ratiosFinitos);
@@ -1655,7 +1693,7 @@ function mostrarTablasSimplex(datos) {
             // Valores de la fila
             fila.forEach((valor, colIdx) => {
                 const td = document.createElement('td');
-                td.textContent = valor.toFixed(4);
+                td.textContent = formatearNumeroTabla(valor);
                 td.style.padding = '8px';
                 td.style.border = '1px solid #ddd';
                 td.style.textAlign = 'center';
@@ -1677,7 +1715,7 @@ function mostrarTablasSimplex(datos) {
                     tablaInfo.fila_saliente === filaIdx - 1 && tablaInfo.col_entrante === colIdx && 
                     tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null) {
                     td.className = 'table-cell-pivote';
-                    td.title = `Elemento Pivote: ${tablaInfo.elemento_pivote.toFixed(4)}`;
+                    td.title = `Elemento Pivote: ${formatearNumeroTabla(tablaInfo.elemento_pivote)}`;
                 }
                 // Resaltar columna entrante (solo en filas de restricciones, no en Z)
                 else if (tablaInfo.col_entrante === colIdx && !esFilaZ) {
@@ -2547,6 +2585,7 @@ function crearResumenDosFases(datos) {
 
 // Mostrar tablas del método Dos Fases (con Fase 1 y Fase 2)
 function mostrarTablasDosFases(datos) {
+    lastDosFasesDatos = datos;
     const container = document.getElementById('tablas-dos-fases-container');
     container.innerHTML = '';
     
@@ -2632,7 +2671,7 @@ function crearTablaHTML(tablaInfo) {
             <strong>Operación de Pivoteo:</strong><br>
             • <strong>Variable Entrante:</strong> ${varEntrante}<br>
             • <strong>Variable Saliente:</strong> ${varSaliente}<br>
-            ${tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null ? `• <strong>Elemento Pivote:</strong> ${tablaInfo.elemento_pivote.toFixed(4)}` : ''}
+            ${tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null ? `• <strong>Elemento Pivote:</strong> ${formatearNumeroTabla(tablaInfo.elemento_pivote)}` : ''}
         `;
         tablaDiv.appendChild(infoDiv);
     }
@@ -2647,7 +2686,7 @@ function crearTablaHTML(tablaInfo) {
                 ? tablaInfo.variables_basicas[idx] 
                 : `Fila ${idx + 1}`;
             const esInfinito = ratio === null || ratio === Infinity || ratio === undefined;
-            const ratioStr = esInfinito ? '∞' : ratio.toFixed(4);
+            const ratioStr = esInfinito ? '∞' : formatearNumeroTabla(ratio);
             const ratiosFinitos = tablaInfo.ratios.filter(r => r !== null && r !== Infinity && r !== undefined);
             const esMinimo = !esInfinito && ratiosFinitos.length > 0 && ratio === Math.min(...ratiosFinitos);
             ratiosHtml += `• ${varBasica}: ${ratioStr} ${esMinimo ? '<strong style="color: #27ae60;">(Mínimo)</strong>' : ''}<br>`;
@@ -2749,7 +2788,7 @@ function crearTablaHTML(tablaInfo) {
         
         fila.forEach((valor, colIdx) => {
             const td = document.createElement('td');
-            td.textContent = valor.toFixed(4);
+            td.textContent = formatearNumeroTabla(valor);
             td.style.padding = '8px';
             td.style.border = '1px solid #ddd';
             td.style.textAlign = 'center';
@@ -2762,7 +2801,7 @@ function crearTablaHTML(tablaInfo) {
                 tablaInfo.fila_saliente === filaIdx - 1 && tablaInfo.col_entrante === colIdx && 
                 tablaInfo.elemento_pivote !== undefined && tablaInfo.elemento_pivote !== null) {
                 td.className = 'table-cell-pivote';
-                td.title = `Elemento Pivote: ${tablaInfo.elemento_pivote.toFixed(4)}`;
+                td.title = `Elemento Pivote: ${formatearNumeroTabla(tablaInfo.elemento_pivote)}`;
             }
             else if (tablaInfo.col_entrante === colIdx && !esFilaObjetivo) {
                 td.className = 'table-cell-entrante';

@@ -163,13 +163,13 @@
             </select>
             <div id="z-coefs-container" style="margin-top: 10px;">
                 <span>Z = </span>
-                <input type="number" class="z-coef" value="3" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off">
+                <input type="number" class="z-coef" value="1" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off">
                 <span> X₁ </span>
                 <select class="z-op" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
                     <option value="+">+</option>
                     <option value="-">−</option>
                 </select>
-                <input type="number" class="z-coef" value="2" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off">
+                <input type="number" class="z-coef" value="5" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off">
                 <span> X₂</span>
             </div>
             <br>
@@ -194,7 +194,49 @@
             <!-- Modo coeficientes (actual) -->
             <div id="modo-coeficientes-simplex">
                 <div id="lista-restricciones-simplex">
-                    <!-- Las restricciones iniciales se agregarán dinámicamente -->
+                    <!-- Placeholders: Max Z = x₁ + 5x₂ s.a. 5x₁+6x₂≤30, 3x₁+2x₂≤15, -x₁+2x₂≤10 -->
+                    <div class="fila-restriccion-simplex">
+                        <input type="number" class="res-coef" value="5" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                        <select class="res-op-var-simplex" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                            <option value="+">+</option>
+                            <option value="-">−</option>
+                        </select>
+                        <input type="number" class="res-coef" value="6" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                        <select class="res-op-simplex">
+                            <option value="<=" selected>&le;</option>
+                            <option value=">=">&ge;</option>
+                            <option value="=">=</option>
+                        </select>
+                        <input type="number" class="res-val-simplex" value="30" style="width: 60px;" inputmode="decimal" autocomplete="off">
+                    </div>
+                    <div class="fila-restriccion-simplex">
+                        <input type="number" class="res-coef" value="3" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                        <select class="res-op-var-simplex" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                            <option value="+">+</option>
+                            <option value="-">−</option>
+                        </select>
+                        <input type="number" class="res-coef" value="2" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                        <select class="res-op-simplex">
+                            <option value="<=" selected>&le;</option>
+                            <option value=">=">&ge;</option>
+                            <option value="=">=</option>
+                        </select>
+                        <input type="number" class="res-val-simplex" value="15" style="width: 60px;" inputmode="decimal" autocomplete="off">
+                    </div>
+                    <div class="fila-restriccion-simplex">
+                        <input type="number" class="res-coef" value="-1" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                        <select class="res-op-var-simplex" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                            <option value="+">+</option>
+                            <option value="-">−</option>
+                        </select>
+                        <input type="number" class="res-coef" value="2" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                        <select class="res-op-simplex">
+                            <option value="<=" selected>&le;</option>
+                            <option value=">=">&ge;</option>
+                            <option value="=">=</option>
+                        </select>
+                        <input type="number" class="res-val-simplex" value="10" style="width: 60px;" inputmode="decimal" autocomplete="off">
+                    </div>
                 </div>
                 
                 <!-- Aviso sobre restricciones de no negatividad implícitas -->
@@ -220,7 +262,7 @@
                         id="restricciones-natural-simplex" 
                         rows="6" 
                         style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid var(--border-primary); border-radius: 4px;"
-                        placeholder="Ejemplos:&#10;x1 + x2 <= 10&#10;2x1 + 3x2 >= 20&#10;x1 - x2 = 5&#10;x1 <= 30&#10;x2 >= 5"
+                        placeholder="Ejemplo (mismo que placeholders):&#10;5x1 + 6x2 <= 30&#10;3x1 + 2x2 <= 15&#10;-x1 + 2x2 <= 10"
                     ></textarea>
                 </div>
                 <div class="info-box">
@@ -250,13 +292,13 @@
             </select>
             <div id="z-coefs-container-dos-fases" style="margin-top: 10px;">
                 <span>Z = </span>
-                <input type="number" class="z-coef-dos-fases" value="3" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off">
+                <input type="number" class="z-coef-dos-fases" value="4" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off">
                 <span> X₁ </span>
                 <select class="z-op-dos-fases" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
                     <option value="+">+</option>
                     <option value="-">−</option>
                 </select>
-                <input type="number" class="z-coef-dos-fases" value="2" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off">
+                <input type="number" class="z-coef-dos-fases" value="3" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off">
                 <span> X₂</span>
             </div>
             <br>
@@ -281,7 +323,49 @@
             <!-- Modo coeficientes (actual) -->
             <div id="modo-coeficientes-dos-fases">
                 <div id="lista-restricciones-dos-fases">
-                    <!-- Las restricciones iniciales se agregarán dinámicamente -->
+                    <!-- Placeholders de fábrica: ejercicio propio con >= (Z=4x₁+3x₂ max, x₁+x₂≥5, x₁≤6, x₂≤6) -->
+                    <div class="fila-restriccion-dos-fases">
+                        <input type="number" class="res-coef-dos-fases" value="1" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                        <select class="res-op-var-dos-fases" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                            <option value="+">+</option>
+                            <option value="-">−</option>
+                        </select>
+                        <input type="number" class="res-coef-dos-fases" value="1" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                        <select class="res-op-dos-fases">
+                            <option value="<=">&le;</option>
+                            <option value=">=" selected>&ge;</option>
+                            <option value="=">=</option>
+                        </select>
+                        <input type="number" class="res-val-dos-fases" value="5" style="width: 60px;" inputmode="decimal" autocomplete="off">
+                    </div>
+                    <div class="fila-restriccion-dos-fases">
+                        <input type="number" class="res-coef-dos-fases" value="1" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                        <select class="res-op-var-dos-fases" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                            <option value="+">+</option>
+                            <option value="-">−</option>
+                        </select>
+                        <input type="number" class="res-coef-dos-fases" value="0" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                        <select class="res-op-dos-fases">
+                            <option value="<=" selected>&le;</option>
+                            <option value=">=">&ge;</option>
+                            <option value="=">=</option>
+                        </select>
+                        <input type="number" class="res-val-dos-fases" value="6" style="width: 60px;" inputmode="decimal" autocomplete="off">
+                    </div>
+                    <div class="fila-restriccion-dos-fases">
+                        <input type="number" class="res-coef-dos-fases" value="0" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                        <select class="res-op-var-dos-fases" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                            <option value="+">+</option>
+                            <option value="-">−</option>
+                        </select>
+                        <input type="number" class="res-coef-dos-fases" value="1" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                        <select class="res-op-dos-fases">
+                            <option value="<=" selected>&le;</option>
+                            <option value=">=">&ge;</option>
+                            <option value="=">=</option>
+                        </select>
+                        <input type="number" class="res-val-dos-fases" value="6" style="width: 60px;" inputmode="decimal" autocomplete="off">
+                    </div>
                 </div>
                 
                 <!-- Aviso sobre restricciones de no negatividad implícitas -->
@@ -307,7 +391,7 @@
                         id="restricciones-natural-dos-fases" 
                         rows="6" 
                         style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid var(--border-primary); border-radius: 4px;"
-                        placeholder="Ejemplos:&#10;x1 + x2 <= 10&#10;2x1 + 3x2 >= 20&#10;x1 - x2 = 5&#10;x1 <= 30&#10;x2 >= 5"
+                        placeholder="Ejemplo (mismo que placeholders):&#10;x1 + x2 >= 5&#10;x1 <= 6&#10;x2 <= 6"
                     ></textarea>
                 </div>
                 <div class="info-box">
@@ -383,7 +467,13 @@
         <div id="calculations-summary-simplex" class="calculations-summary"></div>
         <div id="log-container-simplex" class="timeline" style="display:none;"></div>
 
-        <h3><span style="border-bottom: 3px solid #9b59b6;">Tablas del Simplex</span></h3>
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <h3 style="margin: 0;"><span style="border-bottom: 3px solid #9b59b6;">Tablas del Simplex</span></h3>
+            <div class="display-mode-buttons" role="group" aria-label="Formato de visualización">
+                <button type="button" class="display-mode-btn" data-mode="decimal" onclick="cambiarModoDisplayTablas('decimal', this)">Decimales</button>
+                <button type="button" class="display-mode-btn active" data-mode="fraction" onclick="cambiarModoDisplayTablas('fraction', this)">Fracciones</button>
+            </div>
+        </div>
         <div id="tablas-simplex-container"></div>
 
         <div id="analisis-box-simplex" class="analysis-box">
@@ -408,7 +498,13 @@
         <div id="calculations-summary-dos-fases" class="calculations-summary"></div>
         <div id="log-container-dos-fases" class="timeline" style="display:none;"></div>
 
-        <h3><span style="border-bottom: 3px solid #9b59b6;">Tablas del Método de 2 Fases</span></h3>
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+            <h3 style="margin: 0;"><span style="border-bottom: 3px solid #9b59b6;">Tablas del Método de 2 Fases</span></h3>
+            <div class="display-mode-buttons" role="group" aria-label="Formato de visualización">
+                <button type="button" class="display-mode-btn" data-mode="decimal" onclick="cambiarModoDisplayTablas('decimal', this)">Decimales</button>
+                <button type="button" class="display-mode-btn active" data-mode="fraction" onclick="cambiarModoDisplayTablas('fraction', this)">Fracciones</button>
+            </div>
+        </div>
         <div id="tablas-dos-fases-container"></div>
 
         <div id="analisis-box-dos-fases" class="analysis-box">
@@ -421,11 +517,10 @@
 
     <!-- Footer -->
     <footer>
-        <p>
-            Proyecto Universitario realizado por:  
-            <a href="https://github.com/williamfloress" target="_blank" rel="noopener noreferrer">
-                William Flores
-            </a>
+        <p>Proyecto Universitario realizado por:</p>
+        <p style="text-align: center; margin: 0.5em 0;">
+            <a href="https://github.com/williamfloress" target="_blank" rel="noopener noreferrer">William Flores</a>,
+            Gabriel Lopez
         </p>
         <p>Universidad de Oriente - 2026.</p>
     </footer>
