@@ -598,6 +598,202 @@ function toggleCalculations() {
 // ========== FUNCIONES PARA MÉTODO SIMPLEX ==========
 
 // Cambiar entre métodos
+/**
+ * Limpia los cálculos (oculta resultados) y restaura los formularios a los valores
+ * hardcodeados iniciales. Pensado para el botón sticky "Limpiar".
+ */
+function resetCalculosYSubir() {
+    // Ocultar todos los paneles de resultados (limpiar cálculos hechos)
+    const r = document.getElementById('resultados');
+    const rS = document.getElementById('resultados-simplex');
+    const rD = document.getElementById('resultados-dos-fases');
+    if (r) r.style.display = 'none';
+    if (rS) rS.style.display = 'none';
+    if (rD) rD.style.display = 'none';
+
+    // Objetivo: Maximizar en los tres métodos
+    const obj = document.getElementById('objetivo');
+    const objS = document.getElementById('objetivo-simplex');
+    const objD = document.getElementById('objetivo-dos-fases');
+    if (obj) obj.value = 'max';
+    if (objS) objS.value = 'max';
+    if (objD) objD.value = 'max';
+
+    // ---------- Método gráfico: valores hardcodeados (Z = 3, 2 y 2 restricciones) ----------
+    const zX = document.getElementById('z_x');
+    const zY = document.getElementById('z_y');
+    if (zX) zX.value = '3';
+    if (zY) zY.value = '2';
+    const nat = document.getElementById('restricciones-natural');
+    if (nat) nat.value = '';
+    const listaGrafico = document.getElementById('lista-restricciones');
+    if (listaGrafico) {
+        listaGrafico.innerHTML = `
+            <div class="fila-restriccion">
+                <input type="number" class="res-x" value="2" style="width: 50px;" inputmode="decimal" autocomplete="off"> X 
+                <select class="res-op-var" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="res-y" value="1" style="width: 50px;"> Y 
+                <select class="res-op">
+                    <option value="<=">&le;</option>
+                    <option value=">=">&ge;</option>
+                    <option value="=">=</option>
+                </select>
+                <input type="number" class="res-val" value="100" style="width: 60px;">
+            </div>
+            <div class="fila-restriccion">
+                <input type="number" class="res-x" value="1" style="width: 50px;" inputmode="decimal" autocomplete="off"> X 
+                <select class="res-op-var" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="res-y" value="1" style="width: 50px;"> Y 
+                <select class="res-op">
+                    <option value="<=">&le;</option>
+                    <option value=">=">&ge;</option>
+                    <option value="=">=</option>
+                </select>
+                <input type="number" class="res-val" value="80" style="width: 60px;">
+            </div>
+        `;
+    }
+
+    // ---------- Método Simplex: restaurar Z = 1·X₁ + 5·X₂ y 3 restricciones hardcodeadas ----------
+    const natS = document.getElementById('restricciones-natural-simplex');
+    if (natS) natS.value = '';
+    const zContainerSimplex = document.getElementById('z-coefs-container');
+    if (zContainerSimplex) {
+        zContainerSimplex.innerHTML = `
+            <span>Z = </span>
+            <input type="number" class="z-coef" value="1" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off">
+            <span> X₁ </span>
+            <select class="z-op" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                <option value="+">+</option>
+                <option value="-">−</option>
+            </select>
+            <input type="number" class="z-coef" value="5" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off">
+            <span> X₂</span>
+        `;
+    }
+    const listaSimplex = document.getElementById('lista-restricciones-simplex');
+    if (listaSimplex) {
+        listaSimplex.innerHTML = `
+            <div class="fila-restriccion-simplex">
+                <input type="number" class="res-coef" value="5" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                <select class="res-op-var-simplex" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="res-coef" value="6" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                <select class="res-op-simplex">
+                    <option value="<=" selected>&le;</option>
+                    <option value=">=">&ge;</option>
+                    <option value="=">=</option>
+                </select>
+                <input type="number" class="res-val-simplex" value="30" style="width: 60px;" inputmode="decimal" autocomplete="off">
+            </div>
+            <div class="fila-restriccion-simplex">
+                <input type="number" class="res-coef" value="3" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                <select class="res-op-var-simplex" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="res-coef" value="2" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                <select class="res-op-simplex">
+                    <option value="<=" selected>&le;</option>
+                    <option value=">=">&ge;</option>
+                    <option value="=">=</option>
+                </select>
+                <input type="number" class="res-val-simplex" value="15" style="width: 60px;" inputmode="decimal" autocomplete="off">
+            </div>
+            <div class="fila-restriccion-simplex">
+                <input type="number" class="res-coef" value="-1" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                <select class="res-op-var-simplex" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="res-coef" value="2" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                <select class="res-op-simplex">
+                    <option value="<=" selected>&le;</option>
+                    <option value=">=">&ge;</option>
+                    <option value="=">=</option>
+                </select>
+                <input type="number" class="res-val-simplex" value="10" style="width: 60px;" inputmode="decimal" autocomplete="off">
+            </div>
+        `;
+    }
+
+    // ---------- Método Dos Fases: restaurar Z = 4·X₁ + 3·X₂ y 3 restricciones hardcodeadas ----------
+    const natD = document.getElementById('restricciones-natural-dos-fases');
+    if (natD) natD.value = '';
+    const zContainerDosFases = document.getElementById('z-coefs-container-dos-fases');
+    if (zContainerDosFases) {
+        zContainerDosFases.innerHTML = `
+            <span>Z = </span>
+            <input type="number" class="z-coef-dos-fases" value="4" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off">
+            <span> X₁ </span>
+            <select class="z-op-dos-fases" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                <option value="+">+</option>
+                <option value="-">−</option>
+            </select>
+            <input type="number" class="z-coef-dos-fases" value="3" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off">
+            <span> X₂</span>
+        `;
+    }
+    const listaDosFases = document.getElementById('lista-restricciones-dos-fases');
+    if (listaDosFases) {
+        listaDosFases.innerHTML = `
+            <div class="fila-restriccion-dos-fases">
+                <input type="number" class="res-coef-dos-fases" value="1" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                <select class="res-op-var-dos-fases" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="res-coef-dos-fases" value="1" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                <select class="res-op-dos-fases">
+                    <option value="<=">&le;</option>
+                    <option value=">=" selected>&ge;</option>
+                    <option value="=">=</option>
+                </select>
+                <input type="number" class="res-val-dos-fases" value="5" style="width: 60px;" inputmode="decimal" autocomplete="off">
+            </div>
+            <div class="fila-restriccion-dos-fases">
+                <input type="number" class="res-coef-dos-fases" value="1" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                <select class="res-op-var-dos-fases" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="res-coef-dos-fases" value="0" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                <select class="res-op-dos-fases">
+                    <option value="<=" selected>&le;</option>
+                    <option value=">=">&ge;</option>
+                    <option value="=">=</option>
+                </select>
+                <input type="number" class="res-val-dos-fases" value="6" style="width: 60px;" inputmode="decimal" autocomplete="off">
+            </div>
+            <div class="fila-restriccion-dos-fases">
+                <input type="number" class="res-coef-dos-fases" value="0" style="width: 50px;" data-var="0" inputmode="decimal" autocomplete="off"> X₁ 
+                <select class="res-op-var-dos-fases" data-var="1" style="width: 50px; margin: 0 5px; padding: 4px; text-align: center; font-size: 1.2em; font-weight: bold;">
+                    <option value="+">+</option>
+                    <option value="-">−</option>
+                </select>
+                <input type="number" class="res-coef-dos-fases" value="1" style="width: 50px;" data-var="1" inputmode="decimal" autocomplete="off"> X₂ 
+                <select class="res-op-dos-fases">
+                    <option value="<=" selected>&le;</option>
+                    <option value=">=">&ge;</option>
+                    <option value="=">=</option>
+                </select>
+                <input type="number" class="res-val-dos-fases" value="6" style="width: 60px;" inputmode="decimal" autocomplete="off">
+            </div>
+        `;
+    }
+
+    // Scroll suave al inicio
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function cambiarMetodo(metodo) {
     // Actualizar tabs
     document.querySelectorAll('.tab-button').forEach(btn => {

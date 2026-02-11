@@ -2053,6 +2053,81 @@ input[type="checkbox"]:focus {
 }
 
 /* ========================================
+   BOTÓN STICKY LIMPIAR / VOLVER ARRIBA
+   ======================================== */
+.btn-reset-sticky {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-light);
+    background: var(--accent-primary);
+    border: none;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    box-sizing: border-box;
+    max-width: calc(100vw - 32px);
+}
+.btn-reset-sticky:hover {
+    background: var(--accent-primary-dark, #2980b9);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+.btn-reset-sticky:active {
+    transform: translateY(0);
+}
+.btn-reset-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+}
+.btn-reset-icon svg {
+    width: 100%;
+    height: 100%;
+}
+[data-theme="dark"] .btn-reset-sticky {
+    background: var(--accent-primary);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .btn-reset-sticky:hover {
+    background: var(--accent-primary-dark, #2980b9);
+}
+@media (max-width: 768px) {
+    .btn-reset-sticky {
+        bottom: 16px;
+        right: 16px;
+        left: auto;
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        max-width: 48px;
+        padding: 0;
+        border-radius: 50%;
+        font-size: 0;
+        gap: 0;
+    }
+    .btn-reset-text {
+        display: none !important;
+    }
+    .btn-reset-icon {
+        width: 24px;
+        height: 24px;
+        margin: 0;
+    }
+}
+
+/* ========================================
    FOOTER STYLES
    ======================================== */
 

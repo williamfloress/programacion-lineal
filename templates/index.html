@@ -13,6 +13,14 @@
 </head>
 <body>
 
+    <!-- Botón sticky: limpiar cálculos y subir -->
+    <button type="button" class="btn-reset-sticky" id="btn-reset-sticky" onclick="resetCalculosYSubir()" title="Limpiar datos y volver arriba" aria-label="Limpiar cálculos y volver al inicio">
+        <span class="btn-reset-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </span>
+        <span class="btn-reset-text">Limpiar</span>
+    </button>
+
     <!-- Theme Toggle: pill switch (sun = light, moon = dark) -->
     <button type="button" class="theme-toggle" id="dark-mode-toggle" role="switch" aria-checked="false" aria-label="Cambiar tema claro/oscuro" title="Cambiar modo oscuro/claro">
         <span class="theme-toggle-track">
