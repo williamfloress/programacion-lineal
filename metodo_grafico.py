@@ -4,6 +4,11 @@ Método Gráfico para Programación Lineal.
 Solo sirve cuando tenemos exactamente 2 variables (x e y). La idea es dibujar
 las restricciones en el plano, ver dónde se cortan, quedarnos con los puntos
 que cumplen todo y en esos vértices evaluar Z para ver cuál da el mejor valor.
+
+PASOS DEL ALGORITMO (resumen):
+  1. Calcular todos los puntos donde se cortan las rectas (restricciones + ejes).
+  2. De esos puntos, quedarse solo con los que cumplen todas las restricciones (factibles).
+  3. En cada vértice factible evaluar Z; el que da mejor Z (max o min) es la solución.
 """
 
 import numpy as np
@@ -11,14 +16,7 @@ import numpy as np
 
 class MetodoGrafico:
     def __init__(self, c, A, b, operadores, objetivo='max'):
-        """
-        Recibo el problema en formato estándar:
-        c: coeficientes de Z (ej: [3, 2] para Z = 3x + 2y)
-        A: matriz de restricciones, una fila por restricción
-        b: lado derecho de cada restricción
-        operadores: ['<=', '>=', '='] para cada fila
-        objetivo: 'max' o 'min' según lo que queramos hacer con Z
-        """
+        """Guarda el problema: coeficientes de Z (c), restricciones (A, b, operadores), y si es max o min."""
         self.c = np.array(c)
         self.A = np.array(A)
         self.b = np.array(b)
@@ -42,53 +40,36 @@ class MetodoGrafico:
             print(f"{self.A[i][0]}x + {self.A[i][1]}y <= {self.b[i]}")
 
     def encontrar_intersecciones(self):
-        """
-        Calculo todos los puntos donde se cortan las rectas (restricciones + ejes).
-        Cada restricción es una recta; si cruzo recta i con recta j obtengo un punto.
-        Ese punto puede estar dentro de la región factible o fuera; eso lo filtro después.
-        """
+        """Calcula todos los puntos donde se cortan las rectas (restricciones + ejes x=0, y=0)."""
         posibles_puntos = []
 
-        # Trato los ejes x=0 e y=0 como restricciones más. Así obtengo también
-        # los cortes con los ejes (x>=0, y>=0). En forma de ecuación:
-        # x = 0  ->  1*x + 0*y = 0
-        # y = 0  ->  0*x + 1*y = 0
+        # Incluir ejes x=0 e y=0 como “rectas” más para obtener cortes con los ejes
         matriz_total_A = np.vstack([self.A, [[1, 0], [0, 1]]])
         vector_total_b = np.concatenate([self.b, [0, 0]])
-
         num_lineas = len(vector_total_b)
 
-        # Recorro cada par de rectas (i, j) para no repetir y no contar (i,i)
+        # Por cada par de rectas: resolver sistema 2x2 → (x,y) del corte
         for i in range(num_lineas):
             for j in range(i + 1, num_lineas):
-                # Armo el sistema 2x2: dos ecuaciones lineales, dos incógnitas (x, y)
                 a_sistema = np.array([matriz_total_A[i], matriz_total_A[j]])
                 b_sistema = np.array([vector_total_b[i], vector_total_b[j]])
-
                 try:
-                    # numpy resuelve el sistema y me da el (x,y) del corte
                     punto = np.linalg.solve(a_sistema, b_sistema)
                     posibles_puntos.append(punto)
                 except np.linalg.LinAlgError:
-                    # Si las rectas son paralelas (o iguales), no hay un único corte; lo omito
-                    continue
+                    continue  # rectas paralelas, no hay corte único
 
         return posibles_puntos
 
     def es_factible(self, punto):
-        """
-        Verifico si un punto (x,y) cumple todas las restricciones y x>=0, y>=0.
-        Uso tolerancia 1e-9 para no fallar por redondeos de float.
-        """
+        """Indica si el punto cumple x≥0, y≥0 y todas las restricciones (<=, >=, =)."""
         x, y = punto
         if x < -1e-9 or y < -1e-9:
             return False
-
         for i in range(len(self.b)):
-            valor = np.dot(self.A[i], punto)  # lado izquierdo de la restricción i
+            valor = np.dot(self.A[i], punto)
             limite = self.b[i]
             op = self.operadores[i]
-
             if op == '<=' and valor > limite + 1e-9:
                 return False
             if op == '>=' and valor < limite - 1e-9:
@@ -98,26 +79,21 @@ class MetodoGrafico:
         return True
 
     def obtener_vertices_validos(self):
-        """
-        De todos los puntos de corte entre rectas, me quedo solo con los que
-        están dentro de la región factible. Luego quito duplicados (a veces
-        dos pares de rectas dan el mismo punto por redondeo).
-        """
+        """De todos los cortes entre rectas, deja solo los que son factibles y quita duplicados."""
         todos_puntos = self.encontrar_intersecciones()
-        validos = []
-        for p in todos_puntos:
-            if self.es_factible(p):
-                validos.append(p)
-
+        validos = [p for p in todos_puntos if self.es_factible(p)]
         self.vertice = np.unique(np.array(validos), axis=0)
         return self.vertice
 
     def resolver(self):
         """
-        Orquesto todo: muestro el problema, calculo intersecciones, filtro factibles,
-        evalúo Z en cada vértice y devuelvo el óptimo (o infactible si no hay región común).
+        Ejecuta el método gráfico completo:
+        1. Registra objetivo y restricciones en el log.
+        2. Calcula intersecciones entre todas las rectas (restricciones + ejes).
+        3. Filtra los puntos factibles (cumplen todo).
+        4. Evalúa Z en cada vértice; el mejor (max o min) es la solución.
         """
-        # Escribo en el log la función objetivo con signos bien puestos
+        # Log: función objetivo
         signo_y = '-' if self.c[1] < 0 else '+'
         abs_y = abs(self.c[1])
         self.registrar_paso(f"FUNCIÓN OBJETIVO: {self.objetivo.upper()} Z = {self.c[0]}x {signo_y} {abs_y}y")
@@ -128,7 +104,7 @@ class MetodoGrafico:
             abs_y = abs(a_row[1])
             self.registrar_paso(f"  R{idx}: {a_row[0]}x {signo_y} {abs_y}y {op} {b_val}")
         
-        # --- Paso 1: calcular todas las intersecciones entre rectas (restricciones + ejes) ---
+        # Paso 1: intersecciones entre rectas (restricciones + ejes)
         puntos_corte = []
         matriz_total = np.vstack([self.A, [[1, 0], [0, 1]]])
         vector_total = np.concatenate([self.b, [0, 0]])
@@ -166,7 +142,7 @@ class MetodoGrafico:
                 except np.linalg.LinAlgError:
                     continue
 
-        # --- Paso 2: de esos puntos, ver cuáles cumplen todas las restricciones (son factibles) ---
+        # Paso 2: de esos puntos, cuáles cumplen todas las restricciones (factibles)
         self.registrar_paso("VERIFICACIÓN DE FACTIBILIDAD:")
         validos = []
         validos_info = []
@@ -241,7 +217,7 @@ class MetodoGrafico:
         
         self.vertices = np.array(vertices_unicos)
 
-        # --- Paso 3: en cada vértice factible calculo Z; el mejor según max/min es el óptimo ---
+        # Paso 3: evaluar Z en cada vértice; el mejor (max o min) es el óptimo
         self.registrar_paso("EVALUACIÓN DE VÉRTICES EN LA FUNCIÓN OBJETIVO:")
         signo_y = '-' if self.c[1] < 0 else '+'
         abs_y = abs(self.c[1])

@@ -5,6 +5,12 @@ Sirve para problemas con muchas variables. La idea: convertir todo a forma está
 (igualdades con variables de holgura/exceso/artificiales), armar una tabla y en cada
 iteración entrar una variable que mejore Z y salir otra que mantenga factibilidad;
 cuando ya no se puede mejorar, tenemos el óptimo. Uso Big M cuando hay restricciones >= o =.
+
+PASOS DEL ALGORITMO (resumen):
+  1. Pasar a forma estándar: <= con holgura, >= o = con exceso/artificiales (Big M en Z).
+  2. Armar tabla inicial (fila Z + restricciones); base = holguras/artificiales.
+  3. Iterar: variable entrante (mejora Z), variable saliente (ratio mínimo), pivoteo.
+  4. Parar cuando la fila Z indica óptimo (max: todos ≥0, min: todos ≤0) o no acotado/infactible.
 """
 
 import numpy as np
@@ -84,11 +90,11 @@ class MetodoSimplex:
     
     def convertir_forma_estandar(self):
         """
-        Paso el problema a forma estándar: todas las restricciones en igualdad.
-        - Si es <= añado variable de holgura (slack) con +1.
-        - Si es >= añado variable de exceso con -1 y variable artificial con +1 (para tener base factible).
-        - Si es = añado solo variable artificial.
-        La función objetivo la extiendo con coeficiente 0 para holgura/exceso y M (Big M) para artificiales.
+        Pasa el problema a forma estándar (todas restricciones en igualdad):
+        - <= : se añade variable de holgura (+1).
+        - >= : se añade exceso (-1) y variable artificial (+1).
+        - =  : solo variable artificial.
+        En Z: 0 para holgura/exceso, M (Big M) para artificiales.
         """
         self.registrar_paso("CONVERSIÓN A FORMA ESTÁNDAR:")
         self.registrar_paso(f"Problema original: {self.objetivo.upper()} Z = {' + '.join([f'{self.c[i]}x{i+1}' for i in range(len(self.c))])}")
@@ -105,16 +111,15 @@ class MetodoSimplex:
         self.registrar_paso(f"Variables de exceso necesarias: {num_exceso}")
         self.registrar_paso(f"Variables artificiales necesarias: {num_artificiales}")
         
-        # Construyo la matriz A ampliada: mismas filas, más columnas (x's + holguras + excesos + artificiales)
+        # Matriz A ampliada: columnas = x's + holguras + excesos + artificiales
         A_estandar = np.zeros((num_rest, num_vars + num_holgura + num_exceso + num_artificiales))
         col_actual = num_vars
-
         idx_holgura = 0
         idx_exceso = 0
         idx_artificial = 0
         
         for i in range(num_rest):
-            # Primero copio los coeficientes de las x's de esa restricción
+            # Copiar coeficientes de las x's; luego añadir columna(s) según operador
             if len(self.A[i]) != num_vars:
                 raise ValueError(
                     f"La restricción {i+1} tiene {len(self.A[i])} variables, "
@@ -143,11 +148,10 @@ class MetodoSimplex:
                 col_actual += 1
                 idx_artificial += 1
 
-        # Función objetivo extendida: coef. originales para x's, 0 para holgura/exceso, M para artificiales (Big M)
+        # Z extendida: coef. originales en x's, 0 en holgura/exceso, M en artificiales (Big M)
         c_estandar = np.zeros(num_vars + num_holgura + num_exceso + num_artificiales)
         c_estandar[:num_vars] = np.array(self.c)
-
-        M = 10000   # penalización para que el Simplex expulse las artificiales lo antes posible
+        M = 10000   # Big M: penaliza artificiales para que salgan de la base
         if num_artificiales > 0:
             idx_art = num_vars + num_holgura + num_exceso
             for i in range(num_artificiales):
@@ -157,9 +161,10 @@ class MetodoSimplex:
     
     def resolver(self):
         """
-        Resuelvo el problema: convierto a forma estándar, armo tabla inicial (fila Z + restricciones),
-        y en cada iteración elijo variable entrante (la que más mejora Z), variable saliente (ratio mínimo),
-        pivoteo y repito hasta que la fila Z indique optimalidad o detecte no acotado / no factible.
+        1. Convierte a forma estándar y arma tabla inicial (fila Z + restricciones).
+        2. Base inicial: columnas de holguras y artificiales.
+        3. Bucle: entrante (mejor mejora en Z), saliente (ratio mínimo), pivoteo.
+        4. Si fila Z óptima → leer solución; si artificial con valor > 0 → infactible.
         """
         self.registrar_paso(f"=== MÉTODO SIMPLEX ===")
         # Formatear función objetivo con operadores correctos
@@ -180,13 +185,12 @@ class MetodoSimplex:
                 restriccion_str += f" {signo} {abs_val}x{i+1}"
             self.registrar_paso(f"  R{idx}: {restriccion_str} {op} {b_val}")
         
-        # Paso 1: llevar el problema a forma estándar (A ampliada, c ampliado)
+        # Paso 1: forma estándar (A y c ampliados)
         A_estandar, c_estandar, num_vars, num_holgura, num_exceso, num_artificiales = self.convertir_forma_estandar()
-
         num_rest = len(self.b)
         num_cols_totales = A_estandar.shape[1]
 
-        # La base inicial son las columnas que tienen un 1 por fila: holguras y artificiales
+        # Base inicial: una variable por restricción (holgura o artificial según operador)
         variables_basicas = []
         indices_basicas = []
         col_actual = num_vars
@@ -204,22 +208,14 @@ class MetodoSimplex:
                 indices_basicas.append(col_actual)
                 col_actual += 1
         
-        # Armo la tabla: fila 0 = Z, filas 1..num_rest = restricciones, última columna = solución (RHS)
+        # Tabla: fila 0 = Z, resto = restricciones; última columna = lado derecho (RHS)
         tabla = np.zeros((num_rest + 1, num_cols_totales + 1))
-
         tabla[1:, :num_cols_totales] = A_estandar
         tabla[1:, -1] = self.b
-
-        # Fila Z: en forma Z - c'x = 0, así que en la tabla pongo -c_j; cuando todos sean >= 0 (max) o <= 0 (min) es óptimo
-        tabla[0, :num_cols_totales] = -c_estandar
-
-        # Valor actual de Z = suma de (coef. en Z de variable básica * valor en RHS) para cada fila básica
-        z_val = 0
-        for i, idx_basica in enumerate(indices_basicas):
-            z_val += c_estandar[idx_basica] * self.b[i]
+        tabla[0, :num_cols_totales] = -c_estandar  # Z - c'x = 0 → en tabla van -c_j
+        z_val = sum(c_estandar[indices_basicas[i]] * self.b[i] for i in range(num_rest))
         tabla[0, -1] = z_val
-
-        # Dejo la fila Z en términos de variables no básicas (coef. de básicas = 0) haciendo combinaciones con las filas de restricción
+        # Expresar fila Z solo en no básicas (combinar con filas de restricción para anular básicas)
         for i, idx_basica in enumerate(indices_basicas):
             if abs(tabla[0, idx_basica]) > 1e-9:
                 factor = tabla[0, idx_basica]
@@ -246,10 +242,8 @@ class MetodoSimplex:
         while iteracion < max_iteraciones:
             iteracion += 1
             self.registrar_paso(f"\n--- ITERACIÓN {iteracion} ---")
-
             fila_z = tabla[0, :num_cols_totales]
-
-            # Condición de parada: en max, si todos los coef. en Z son >= 0 ya no podemos mejorar; en min, si son <= 0
+            # Parada: max → todos coef. Z ≥ 0; min → todos ≤ 0
             if self.objetivo == 'max':
                 indices_negativos = np.where(fila_z < -1e-9)[0]
                 if len(indices_negativos) == 0:
@@ -281,7 +275,7 @@ class MetodoSimplex:
             else:
                 self.registrar_paso(f"   En minimización, valores positivos en la fila Z indican que aumentar {var_entrante_nombre} reducirá el valor de Z.")
             
-            # Variable saliente: la que limita más el crecimiento de la entrante. Ratio = RHS / coef. entrante (solo si coef. > 0); el mínimo ratio gana
+            # Variable saliente: ratio = RHS / coef. entrante (solo si coef. > 0); mínimo ratio → sale
             self.registrar_paso(f"\n📊 CÁLCULO DE RATIOS (para determinar variable saliente):")
             self.registrar_paso(f"   Ratio = Valor en columna 'Solución' ÷ Valor en columna '{var_entrante_nombre}'")
             self.registrar_paso(f"   Solo se calculan ratios para filas donde el coeficiente de {var_entrante_nombre} es positivo.")
@@ -348,7 +342,7 @@ class MetodoSimplex:
             variables_basicas[fila_saliente] = var_entrante_nombre
             indices_basicas[fila_saliente] = col_entrante
             
-            # Pivoteo: normalizar la fila del pivote (dividir por el elemento pivote) y luego hacer ceros en esa columna en el resto de filas
+            # Pivoteo: dividir fila pivote por elemento pivote; luego hacer 0 esa columna en las demás filas
             fila_pivote = fila_saliente + 1
             elemento_pivote = float(tabla[fila_pivote, col_entrante])
 
@@ -357,13 +351,10 @@ class MetodoSimplex:
             self.registrar_paso(f"   Paso 1: Normalizar la fila pivote (dividir toda la fila por {elemento_pivote:.4f})")
             self.registrar_paso(f"           Esto hace que el elemento pivote sea 1 y {var_entrante_nombre} entre a la base con coeficiente 1.")
             
-            # Normalizar fila pivote
-            tabla[fila_pivote, :] /= elemento_pivote
-            
+            tabla[fila_pivote, :] /= elemento_pivote  # normalizar fila pivote
             self.registrar_paso(f"   Paso 2: Eliminación gaussiana (hacer cero la columna {var_entrante_nombre} en todas las demás filas)")
             self.registrar_paso(f"           Para cada fila i ≠ fila pivote: Fila[i] = Fila[i] - (coeficiente en columna {var_entrante_nombre}) × Fila[pivote]")
-            
-            # Eliminación gaussiana: en cada otra fila resto (coef. en col. entrante) * fila_pivote para dejar 0 en esa columna
+            # Hacer 0 la columna entrante en el resto de filas (restar múltiplo de fila pivote)
             for i in range(num_rest + 1):
                 if i != fila_pivote:
                     factor = tabla[i, col_entrante]
@@ -407,7 +398,7 @@ class MetodoSimplex:
                                elemento_pivote=elemento_pivote,
                                ratios=ratios)
         
-        # Leo la solución: las x's que están en la base toman el valor del RHS de su fila; las que no están están a 0
+        # Leer solución: x's básicas = valor RHS de su fila; no básicas = 0
         solucion = np.zeros(num_vars)
         for i, idx_basica in enumerate(indices_basicas):
             if idx_basica < num_vars:
@@ -421,7 +412,7 @@ class MetodoSimplex:
         for i in range(num_vars):
             self.registrar_paso(f"x{i+1} = {solucion[i]:.4f}")
         
-        # Si alguna variable artificial sigue en la base con valor > 0, el problema original es infactible
+        # Si queda alguna artificial en base con valor > 0 → problema infactible
         if num_artificiales > 0:
             idx_art_inicio = num_vars + num_holgura + num_exceso
             for i, idx_basica in enumerate(indices_basicas):

@@ -1,11 +1,17 @@
 """
 Método de las Dos Fases para Programación Lineal.
 
-Cuando hay restricciones >= o = necesitamos variables artificiales para tener
-una base factible. En vez de Big M, aquí hacemos dos etapas:
-- Fase 1: minimizar W = suma de artificiales hasta W = 0 (así encontramos un punto factible).
-- Fase 2: con esa base factible, optimizar la Z original (sin artificiales en la función objetivo).
-Si en Fase 1 no llegamos a W = 0, el problema es infactible.
+Cuando hay restricciones >= o = se usan variables artificiales. En vez de Big M,
+se hacen dos etapas:
+- Fase 1: minimizar W = suma de artificiales hasta W = 0 → se obtiene una base factible.
+- Fase 2: con esa base, optimizar la Z original (Simplex normal).
+Si en Fase 1 W no llega a 0, el problema es infactible.
+
+PASOS DEL ALGORITMO (resumen):
+  1. Forma estándar (holgura, exceso, artificiales); en Z no se usa Big M.
+  2. Fase 1: minimizar W (suma de artificiales); tabla con fila W; Simplex hasta W=0.
+  3. Si W=0: Fase 2 con la tabla final, reemplazar fila W por Z y seguir Simplex hasta óptimo.
+  4. Si W>0: problema infactible.
 """
 
 import numpy as np
@@ -80,9 +86,9 @@ class MetodoDosFases:
     
     def convertir_forma_estandar(self):
         """
-        Igual que en Simplex: holgura para <=, exceso + artificial para >=, solo artificial para =.
-        Aquí NO pongo Big M en la función objetivo; la Fase 1 usa W = suma de artificiales.
-        Guardo los índices de columnas de artificiales para construir la fila W en Fase 1.
+        Forma estándar como en Simplex: <= holgura, >= exceso+artificial, = solo artificial.
+        No se usa Big M en Z; Fase 1 minimiza W = suma de artificiales.
+        Se guardan índices de columnas artificiales para armar la fila W.
         """
         self.registrar_paso("CONVERSIÓN A FORMA ESTÁNDAR:")
         objetivo_str = f"{self.c[0]}x₁"
@@ -108,7 +114,7 @@ class MetodoDosFases:
         idx_holgura = 0
         idx_exceso = 0
         idx_artificial = 0
-        indices_artificiales = []   # necesito saber en qué columnas están las artificiales para la Fase 1
+        indices_artificiales = []   # columnas de artificiales (para fila W en Fase 1)
 
         for i in range(num_rest):
             if len(self.A[i]) != num_vars:
@@ -149,9 +155,9 @@ class MetodoDosFases:
 
     def fase1(self, A_estandar, num_vars, num_holgura, num_exceso, num_artificiales, indices_artificiales):
         """
-        Fase 1: minimizo W = suma de variables artificiales (coef. -1 en la fila W para cada artificial).
-        Cuando W = 0, todas las artificiales salieron de la base y tenemos una solución básica factible.
-        Si termino con W > 0, el problema es infactible. Devuelvo (factible?, tabla, vars_básicas, índices).
+        Fase 1: minimizar W = suma de artificiales (fila W con -1 en cada artificial).
+        Simplex hasta que W=0 → base factible; si W>0 al terminar → infactible.
+        Devuelve: (factible?, tabla final, variables_basicas, indices_basicas).
         """
         self.registrar_paso("\n" + "="*60)
         self.registrar_paso("FASE 1: MINIMIZAR W = SUMA DE VARIABLES ARTIFICIALES")
@@ -160,11 +166,9 @@ class MetodoDosFases:
         if num_artificiales == 0:
             self.registrar_paso("No hay variables artificiales. Saltando Fase 1.")
             return True, None, None, None
-
         num_rest = len(self.b)
         num_cols_totales = A_estandar.shape[1]
-
-        # Base inicial: holguras y artificiales (igual que en Simplex con Big M)
+        # Base inicial: una variable por restricción (holgura o artificial)
         variables_basicas = []
         indices_basicas = []
         col_actual = num_vars
@@ -188,12 +192,10 @@ class MetodoDosFases:
         tabla = np.zeros((num_rest + 1, num_cols_totales + 1))
         tabla[1:, :num_cols_totales] = A_estandar
         tabla[1:, -1] = self.b
-
-        # Fila W = suma de artificiales; en forma W - ... = 0 pongo -1 en cada columna artificial (minimizar W)
+        # Fila W: minimizar suma de artificiales → -1 en cada columna artificial
         for idx_art in indices_artificiales:
             tabla[0, idx_art] = -1
-
-        # Dejo la fila W expresada solo con no básicas (coef. de básicas = 0) para poder leer condición de optimalidad
+        # Expresar fila W solo en no básicas (anular coef. de básicas)
         for i, idx_basica in enumerate(indices_basicas):
             if abs(tabla[0, idx_basica]) > 1e-9:
                 factor = tabla[0, idx_basica]
@@ -225,7 +227,7 @@ class MetodoDosFases:
         self.registrar_tabla(tabla.copy(), 0, variables_basicas.copy(), "Tabla inicial Fase 1 (minimizar W)", 
                            nombres_columnas=nombres_columnas, fase=1)
         
-        # Simplex para minimizar W: variable entrante = la de mayor coef. positivo en fila W; saliente = ratio mínimo
+        # Simplex minimizando W: entrante = mayor coef. positivo en W; saliente = ratio mínimo
         iteracion = 0
         max_iteraciones = 100
 
@@ -291,7 +293,7 @@ class MetodoDosFases:
         w_final = tabla[0, -1]
         self.registrar_paso(f"\n=== FIN DE FASE 1 ===")
         self.registrar_paso(f"Valor final de W: {w_final:.6f}")
-
+        # Si W no es 0, alguna artificial sigue en base → infactible
         if abs(w_final) > 1e-6:
             self.registrar_paso("❌ W > 0: El problema es NO FACTIBLE")
             self.registrar_paso("Las restricciones son contradictorias.")
@@ -304,9 +306,8 @@ class MetodoDosFases:
     def fase2(self, tabla_fase1, variables_basicas, indices_basicas, c_estandar,
              num_vars, num_holgura, num_exceso, num_artificiales, indices_artificiales):
         """
-        Fase 2: parto de la tabla final de Fase 1 (o de una tabla estándar si no hubo artificiales).
-        Reemplazo la fila W por la fila Z con la función objetivo original (-c para Z - c'x = 0)
-        y sigo con Simplex normal hasta optimalidad. Las artificiales ya no entran en Z (coef. 0).
+        Fase 2: partir de tabla final de Fase 1; reemplazar fila W por Z (objetivo original).
+        Simplex normal hasta óptimo; artificiales tienen coef. 0 en Z.
         """
         self.registrar_paso("\n" + "="*60)
         self.registrar_paso("FASE 2: OPTIMIZAR FUNCIÓN OBJETIVO ORIGINAL")
@@ -316,7 +317,7 @@ class MetodoDosFases:
         num_cols_totales = c_estandar.shape[0]
         
         if tabla_fase1 is None:
-            # Caso sin artificiales: armo tabla estándar solo con holguras
+            # Sin artificiales: tabla inicial solo con holguras y fila Z
             A_estandar = np.zeros((num_rest, num_vars + num_holgura + num_exceso + num_artificiales))
             col_actual = num_vars
             
@@ -339,16 +340,11 @@ class MetodoDosFases:
             z_val = 0
             tabla[0, -1] = z_val
         else:
-            # Partir de tabla de Fase 1, restaurar fila Z
+            # Usar tabla de Fase 1 y poner fila Z con objetivo original (-c)
             tabla = tabla_fase1.copy()
-            
-            # Restaurar fila Z con función objetivo original
             tabla[0, :num_cols_totales] = -c_estandar
-            
-            # RHS de la fila Z debe empezar en 0; las operaciones de fila lo convertirán en el Z correcto
             tabla[0, -1] = 0.0
-            
-            # Actualizar fila Z para básicas (costos reducidos)
+            # Anular en Z los coeficientes de variables básicas (costos reducidos)
             for i, idx_basica in enumerate(indices_basicas):
                 if abs(tabla[0, idx_basica]) > 1e-9:
                     factor = tabla[0, idx_basica]
@@ -459,7 +455,7 @@ class MetodoDosFases:
                                ratios=ratios,
                                fase=2)
         
-        # Leo solución igual que en Simplex: x's básicas = RHS de su fila, resto 0
+        # Leer solución: x's básicas = RHS de su fila; resto 0
         solucion = np.zeros(num_vars)
         for i, idx_basica in enumerate(indices_basicas):
             if idx_basica < num_vars:
@@ -536,7 +532,7 @@ class MetodoDosFases:
         }
     
     def resolver(self):
-        """Orquesto todo: forma estándar, Fase 1 (min W), si W=0 paso a Fase 2 (opt Z) y devuelvo resultado."""
+        """Ejecuta: forma estándar → Fase 1 (min W) → si W=0, Fase 2 (opt Z); si W>0 → infactible."""
         self.registrar_paso("=== MÉTODO DE LAS DOS FASES ===")
         
         # Formatear función objetivo
