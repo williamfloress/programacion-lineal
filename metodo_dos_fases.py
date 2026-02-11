@@ -306,8 +306,9 @@ class MetodoDosFases:
     def fase2(self, tabla_fase1, variables_basicas, indices_basicas, c_estandar,
              num_vars, num_holgura, num_exceso, num_artificiales, indices_artificiales):
         """
-        Fase 2: partir de tabla final de Fase 1; reemplazar fila W por Z (objetivo original).
-        Simplex normal hasta óptimo; artificiales tienen coef. 0 en Z.
+        Fase 2: partir de tabla final de Fase 1; eliminar columnas de variables artificiales
+        (y filas redundantes 0=0 si alguna artificial sigue en la base); reemplazar fila W por Z.
+        Simplex normal hasta óptimo.
         """
         self.registrar_paso("\n" + "="*60)
         self.registrar_paso("FASE 2: OPTIMIZAR FUNCIÓN OBJETIVO ORIGINAL")
@@ -340,8 +341,32 @@ class MetodoDosFases:
             z_val = 0
             tabla[0, -1] = z_val
         else:
-            # Usar tabla de Fase 1 y poner fila Z con objetivo original (-c)
-            tabla = tabla_fase1.copy()
+            # Eliminar columnas de variables artificiales (y filas donde la básica es artificial)
+            keep_cols = [j for j in range(num_cols_totales) if j not in indices_artificiales]
+            # Filas de restricción a mantener: las que tienen variable básica no artificial
+            keep_row_indices = [i for i in range(num_rest) if not variables_basicas[i].startswith('a')]
+            num_rest = len(keep_row_indices)
+            num_cols_totales = len(keep_cols)
+            
+            self.registrar_paso("Eliminando columnas de variables artificiales para Fase 2.")
+            if len(keep_row_indices) < len(self.b):
+                self.registrar_paso("Eliminando filas redundantes (restricción 0=0 donde una artificial estaba en la base).")
+            
+            # Tabla reducida: fila 0 (objetivo) + filas de restricción mantenidas; columnas keep_cols + RHS
+            tabla = np.zeros((num_rest + 1, num_cols_totales + 1))
+            tabla[0, :num_cols_totales] = tabla_fase1[0, np.array(keep_cols)]
+            tabla[0, -1] = tabla_fase1[0, -1]
+            for i, row_idx in enumerate(keep_row_indices):
+                fila_tabla = row_idx + 1
+                tabla[i + 1, :num_cols_totales] = tabla_fase1[fila_tabla, np.array(keep_cols)]
+                tabla[i + 1, -1] = tabla_fase1[fila_tabla, -1]
+            
+            variables_basicas = [variables_basicas[i] for i in keep_row_indices]
+            # Nuevos índices de columnas básicas: posición en keep_cols del índice original
+            indices_basicas = [keep_cols.index(indices_basicas[i]) for i in keep_row_indices]
+            c_estandar = np.array([c_estandar[j] for j in keep_cols])
+            
+            # Fila Z con objetivo original (-c) sobre columnas reducidas
             tabla[0, :num_cols_totales] = -c_estandar
             tabla[0, -1] = 0.0
             # Anular en Z los coeficientes de variables básicas (costos reducidos)
@@ -350,27 +375,20 @@ class MetodoDosFases:
                     factor = tabla[0, idx_basica]
                     tabla[0, :] -= factor * tabla[i + 1, :]
         
-        # Generar nombres de columnas en el mismo orden que se construyó A_estandar
+        # Nombres de columnas (solo las que quedan: x, s, e; sin artificiales en Fase 2)
         nombres_columnas = []
         for i in range(num_vars):
             nombres_columnas.append(f"x{i+1}")
-        
-        # Agregar nombres de variables auxiliares en el orden que se crearon
         idx_holgura = 1
         idx_exceso = 1
-        idx_artificial = 1
-        for i in range(num_rest):
+        for i in range(len(self.b)):
             if self.operadores[i] == '<=':
                 nombres_columnas.append(f"s{idx_holgura}")
                 idx_holgura += 1
             elif self.operadores[i] == '>=':
                 nombres_columnas.append(f"e{idx_exceso}")
                 idx_exceso += 1
-                nombres_columnas.append(f"a{idx_artificial}")
-                idx_artificial += 1
-            elif self.operadores[i] == '=':
-                nombres_columnas.append(f"a{idx_artificial}")
-                idx_artificial += 1
+            # No añadir nombres de artificiales; en Fase 2 ya no existen esas columnas
 
         self.registrar_paso("\nTABLA INICIAL DE FASE 2:")
         self.registrar_tabla(tabla.copy(), 0, variables_basicas.copy(), "Tabla inicial Fase 2 (optimizar Z)",
